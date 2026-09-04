@@ -31,7 +31,10 @@ import com.yudha.catatanbelanja.android.designsystem.component.input.AppUnitDrop
 import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
 import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
 import com.yudha.catatanbelanja.android.format.toQtyLabel
+import com.yudha.catatanbelanja.core.domain.model.RateMode
 import com.yudha.catatanbelanja.core.domain.model.StockItem
+import com.yudha.catatanbelanja.features.stock.domain.model.StockRateEstimate
+import com.yudha.catatanbelanja.features.stock.domain.model.StockShadow
 
 /**
  * The add / edit stock sheet. Every field is a local buffer that is only pushed on Simpan, which
@@ -45,10 +48,14 @@ internal fun StockEditorSheet(
     unit: String,
     units: List<String>,
     knownNames: List<String>,
+    shadow: StockShadow?,
+    rateMode: RateMode,
+    autoEstimate: StockRateEstimate?,
     enabled: Boolean,
     onNameChanged: (String) -> Unit,
     onSave: (name: String, qtyText: String, unit: String, minText: String) -> Unit,
     onMarkEmpty: () -> Unit,
+    onOpenRate: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -106,6 +113,17 @@ internal fun StockEditorSheet(
             }
         }
 
+        if (shadow != null) {
+            Spacer(Modifier.height(Spacing.x14))
+            StockSmartCard(
+                shadow = shadow,
+                enabled = enabled,
+                // Types the estimate into the field below and stops there. Simpan is still the
+                // user's tap, so an estimate never becomes a saved quantity on its own.
+                onApply = { qtyText = shadow.estimatedQty.toQtyLabel() },
+            )
+        }
+
         Spacer(Modifier.height(Spacing.x12))
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x10)) {
             AppTextField(
@@ -137,6 +155,19 @@ internal fun StockEditorSheet(
             enabled = enabled,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         )
+
+        // A brand-new row has no history to learn from and no id to hang a rate on yet, so the
+        // add sheet stays exactly as short as it has always been.
+        if (!isNew) {
+            Spacer(Modifier.height(Spacing.x12))
+            StockRateRow(
+                mode = rateMode,
+                shadow = shadow,
+                autoEstimate = autoEstimate,
+                enabled = enabled,
+                onClick = onOpenRate,
+            )
+        }
 
         Spacer(Modifier.height(Spacing.x20))
         Row(

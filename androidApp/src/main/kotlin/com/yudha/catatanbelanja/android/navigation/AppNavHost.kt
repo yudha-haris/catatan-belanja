@@ -13,6 +13,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.yudha.catatanbelanja.android.screen.dashboard.PriceTrendScreen
+import com.yudha.catatanbelanja.android.screen.dashboard.SpendingRankingScreen
+import com.yudha.catatanbelanja.android.screen.dashboard.SpendingReportScreen
 import com.yudha.catatanbelanja.android.screen.history.CompareScreen
 import com.yudha.catatanbelanja.android.screen.history.SessionDetailScreen
 import com.yudha.catatanbelanja.android.screen.list.ShoppingListScreen
@@ -60,6 +63,15 @@ fun AppNavHost(
                 },
                 onOpenCompare = { aId, bId ->
                     navController.navigate(AppDestination.Compare(aId, bId).route)
+                },
+                onOpenSpendingReport = {
+                    navController.navigate(AppDestination.SpendingReport.route)
+                },
+                onOpenSpendingRanking = {
+                    navController.navigate(AppDestination.SpendingRanking.route)
+                },
+                onOpenPriceTrend = { name ->
+                    navController.navigate(AppDestination.PriceTrend(name).route)
                 },
                 onOpenSettings = {
                     navController.navigate(AppDestination.Settings.route)
@@ -121,6 +133,40 @@ fun AppNavHost(
             CompareScreen(
                 aId = entry.arguments?.getString(AppDestination.Arg.A_ID).orEmpty(),
                 bId = entry.arguments?.getString(AppDestination.Arg.B_ID).orEmpty(),
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(AppDestination.Pattern.SPENDING_REPORT) {
+            SpendingReportScreen(
+                onBack = { navController.popBackStack() },
+                onOpenSessionDetail = { sessionId ->
+                    navController.navigate(AppDestination.SessionDetail(sessionId).route)
+                },
+            )
+        }
+
+        composable(AppDestination.Pattern.SPENDING_RANKING) {
+            SpendingRankingScreen(
+                onBack = { navController.popBackStack() },
+                onOpenPriceTrend = { name ->
+                    navController.navigate(AppDestination.PriceTrend(name).route)
+                },
+            )
+        }
+
+        composable(
+            route = AppDestination.Pattern.PRICE_TREND,
+            arguments = listOf(
+                navArgument(AppDestination.Arg.TREND_NAME) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) { entry ->
+            PriceTrendScreen(
+                initialName = entry.arguments?.getString(AppDestination.Arg.TREND_NAME),
                 onBack = { navController.popBackStack() },
             )
         }

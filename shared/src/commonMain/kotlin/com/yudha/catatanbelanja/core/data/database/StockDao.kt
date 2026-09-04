@@ -3,10 +3,17 @@ package com.yudha.catatanbelanja.core.data.database
 import com.yudha.catatanbelanja.core.domain.model.StockCheckEntry
 import com.yudha.catatanbelanja.core.domain.model.StockCheckLog
 import com.yudha.catatanbelanja.core.domain.model.StockItem
+import com.yudha.catatanbelanja.core.domain.model.StockRate
+import com.yudha.catatanbelanja.core.domain.model.StockReading
 import com.yudha.catatanbelanja.db.CatatanBelanjaDatabase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
+/**
+ * Stock rows, the month-end check logs, and the two tables behind the estimate: the readings a
+ * quantity leaves behind over time and the per-item drain rate. Whether a write deserves a
+ * reading is the repository's call — this only guarantees the row and its reading land together.
+ */
 class StockDao(
     private val database: CatatanBelanjaDatabase,
     private val dispatcher: CoroutineDispatcher,
@@ -15,6 +22,8 @@ class StockDao(
     private val stock = database.stockItemQueries
     private val logs = database.stockCheckLogQueries
     private val logItems = database.stockCheckLogItemQueries
+    private val readings = database.stockReadingQueries
+    private val rates = database.stockRateQueries
 
     suspend fun getStockItems(): List<StockItem> = withContext(dispatcher) {
         stock.selectAll().executeAsList().map { it.toDomain() }
@@ -28,22 +37,84 @@ class StockDao(
         stock.countAll().executeAsOne().toInt()
     }
 
-    suspend fun upsertStockItem(item: StockItem) = withContext(dispatcher) {
-        upsertStockRow(item)
-    }
+    /** [reading] is written in the same transaction, so the row and its history never disagree. */
+    suspend fun upsertStockItem(item: StockItem, reading: StockReading? = null) =
+        withContext(dispatcher) {
+            database.transaction {
+                upsertStockRow(item)
+                if (reading == null) return@transaction
+                insertReading(reading)
+            }
+        }
 
-    suspend fun upsertStockItems(items: List<StockItem>) = withContext(dispatcher) {
+    suspend fun upsertStockItems(items: List<StockItem>, readings: List<StockReading> = emptyList()) =
+        withContext(dispatcher) {
+            database.transaction {
+                items.forEach { upsertStockRow(it) }
+                readings.forEach { insertReading(it) }
+            }
+        }
+
+    /**
+     * Neither stock_reading nor stock_rate can declare a foreign key onto stock_item — see
+     * StockReading.sq — so the cascade SQLite would have done for free is done here instead.
+     */
+    suspend fun deleteStockItem(id: String) = withContext(dispatcher) {
         database.transaction {
-            items.forEach { upsertStockRow(it) }
+            readings.deleteByItemId(id)
+            rates.deleteByItemId(id)
+            stock.deleteById(id)
         }
     }
 
-    suspend fun deleteStockItem(id: String) = withContext(dispatcher) {
-        stock.deleteById(id)
+    suspend fun deleteAllStockItems() = withContext(dispatcher) {
+        database.transaction {
+            readings.deleteAll()
+            rates.deleteAll()
+            stock.deleteAll()
+        }
     }
 
-    suspend fun deleteAllStockItems() = withContext(dispatcher) {
-        stock.deleteAll()
+    /** Every item's readings, oldest first, keyed by stock item id. */
+    suspend fun getReadings(): Map<String, List<StockReading>> = withContext(dispatcher) {
+        readings.selectAll().executeAsList().map { it.toDomain() }.groupBy { it.itemId }
+    }
+
+    suspend fun getReadings(itemId: String): List<StockReading> = withContext(dispatcher) {
+        readings.selectByItemId(itemId).executeAsList().map { it.toDomain() }
+    }
+
+    suspend fun insertReadings(entries: List<StockReading>) = withContext(dispatcher) {
+        if (entries.isEmpty()) return@withContext
+        database.transaction { entries.forEach { insertReading(it) } }
+    }
+
+    suspend fun deleteAllReadings() = withContext(dispatcher) {
+        readings.deleteAll()
+    }
+
+    /** Answers for every item, saved or not: an untouched item is on [StockRate]'s own defaults. */
+    suspend fun getRates(): Map<String, StockRate> = withContext(dispatcher) {
+        rates.selectAll().executeAsList().associate { row -> row.item_id to row.toDomain() }
+    }
+
+    suspend fun getRate(itemId: String): StockRate = withContext(dispatcher) {
+        rates.selectByItemId(itemId).executeAsOneOrNull()?.toDomain() ?: StockRate(itemId = itemId)
+    }
+
+    suspend fun upsertRate(rate: StockRate) = withContext(dispatcher) {
+        rates.upsert(
+            item_id = rate.itemId,
+            mode = rate.mode.name,
+            manual_qty = rate.manualQty,
+            manual_unit = rate.manualUnit,
+            manual_period = rate.manualPeriod.name,
+            updated_at = rate.updatedAt,
+        )
+    }
+
+    suspend fun deleteAllRates() = withContext(dispatcher) {
+        rates.deleteAll()
     }
 
     suspend fun getCheckLogs(): List<StockCheckLog> = withContext(dispatcher) {
@@ -106,6 +177,18 @@ class StockDao(
         )
     }
 
+    /** Every insert trims the item's own tail: a year-old reading cannot describe today's habit. */
+    private fun insertReading(reading: StockReading) {
+        readings.insert(
+            item_id = reading.itemId,
+            qty = reading.qty,
+            unit = reading.unit,
+            at = reading.at,
+            source = reading.source.name,
+        )
+        readings.pruneItem(itemId = reading.itemId, keep = MAX_READINGS_PER_ITEM)
+    }
+
     /** Keeps the month unique: an existing month keeps its id and only moves [checkedAt]. */
     private fun upsertLogRow(id: String, month: String, checkedAt: Long): String {
         val existing = logs.selectByMonth(month).executeAsOneOrNull()
@@ -124,4 +207,8 @@ class StockDao(
 
     private fun entriesOf(logId: String): List<StockCheckEntry> =
         logItems.selectByLogId(logId).executeAsList().map { it.toDomain() }
+
+    private companion object {
+        const val MAX_READINGS_PER_ITEM = 40L
+    }
 }

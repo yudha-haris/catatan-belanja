@@ -1,8 +1,15 @@
 package com.yudha.catatanbelanja.features.dashboard.domain.model
 
+import com.yudha.catatanbelanja.core.domain.model.PriceBasis
+
 /**
  * Everything the Ringkasan tab renders, already derived. Money stays in rupiah as [Int] and dates
  * as epoch millis — the screen owns the formatting.
+ *
+ * The price trend is deliberately absent: it depends on the item's saved [PriceBasis] and its
+ * manual quantity corrections, which are read from the database rather than derived from the
+ * sessions. `DashboardState` carries it as a [PriceTrendData] built by the same use case the
+ * trend page uses, so the card and the page can never disagree about what an item's price did.
  */
 data class DashboardData(
     val monthKey: String = "",
@@ -18,15 +25,4 @@ data class DashboardData(
     val hasMonthAverage: Boolean = false,
     val recentBars: List<SpendingBar> = emptyList(),
     val topItems: List<TopItem> = emptyList(),
-    /** Names bought at least twice — the trend picker's options, most bought first. */
-    val trendableNames: List<String> = emptyList(),
-    val trendName: String? = null,
-    val trendPoints: List<TrendPoint> = emptyList(),
-    val hasTrend: Boolean = false,
-    val trendFirstPrice: Int = 0,
-    val trendLastPrice: Int = 0,
-    /** Signed: the first→last change, so the screen prints "+12%" or "-8%" straight from it. */
-    val trendDeltaPercent: Int = 0,
-    val isTrendUp: Boolean = false,
-    val isTrendDown: Boolean = false,
 )

@@ -334,6 +334,50 @@
     <string name="stock_toast_deleted">Removed from stock</string>
     <string name="stock_toast_marked_empty">%1$s marked as out</string>
 
+    <!-- smart stock: the estimate drawn beside a stored quantity, and the pace behind it -->
+    <string name="stock_row_estimate">≈ %1$s %2$s left now</string>
+    <string name="stock_maybe_low">may be low</string>
+    <string name="stock_subtitle_maybe_low">%1$d may be low</string>
+    <string name="stock_estimate_hit">Estimate was %1$d%% right 🎯</string>
+    <string name="stock_check_previous_estimate">was %1$s %2$s · reckon ≈ %3$s</string>
+
+    <string name="stock_smart_title">Roughly left now</string>
+    <string name="stock_smart_apply">Use this</string>
+    <string name="stock_smart_basis">about %1$s %2$s a day · %3$s</string>
+    <string name="stock_smart_days_left">runs out in ~%1$d days</string>
+    <string name="stock_smart_days_left_none">may already be out</string>
+    <string name="stock_smart_since">last written down %1$d days ago</string>
+    <string name="stock_smart_confidence_low">still learning</string>
+    <string name="stock_smart_confidence_medium">getting better</string>
+    <string name="stock_smart_confidence_high">fairly sure</string>
+    <string name="stock_smart_confidence_exact">your own setting</string>
+
+    <string name="stock_rate_row_label">Usage pace</string>
+    <string name="stock_rate_per_day">%1$s %2$s/day</string>
+    <string name="stock_rate_value_auto">Automatic · %1$s</string>
+    <string name="stock_rate_value_auto_learning">Automatic · still learning</string>
+    <string name="stock_rate_value_manual">You set it · %1$s</string>
+    <string name="stock_rate_value_manual_plain">You set it</string>
+    <string name="stock_rate_value_off">Off</string>
+    <string name="stock_rate_sheet_title">Usage pace</string>
+    <string name="stock_rate_mode_auto">Automatic</string>
+    <string name="stock_rate_mode_manual">Set it myself</string>
+    <string name="stock_rate_mode_off">Off</string>
+    <string name="stock_rate_hint_auto">The app works the pace out from how this item has changed over time. Nothing to fill in.</string>
+    <string name="stock_rate_hint_manual">Say roughly how much you get through. This always beats the automatic guess.</string>
+    <string name="stock_rate_hint_off">No estimate for this item. The quantity changes only when you change it.</string>
+    <string name="stock_rate_auto_found">From your history: about %1$s %2$s a day, over %3$d changes.</string>
+    <string name="stock_rate_auto_none">Not enough history yet. Update this item a couple of times and the pace works itself out.</string>
+    <string name="stock_rate_qty_label">Used about</string>
+    <string name="stock_rate_qty_placeholder">e.g. 1</string>
+    <string name="stock_rate_period_label">per</string>
+    <string name="stock_rate_period_day">day</string>
+    <string name="stock_rate_period_week">week</string>
+    <string name="stock_rate_period_month">month</string>
+    <string name="stock_rate_toast_auto">Back to the automatic pace</string>
+    <string name="stock_rate_toast_manual">Usage pace saved</string>
+    <string name="stock_rate_toast_off">Estimate turned off</string>
+
     <!-- end-of-month stock check -->
     <string name="stock_check_cta">Check what is left this month</string>
     <string name="stock_check_cta_hint">Fill in every item at once, saved as a monthly record</string>
@@ -455,4 +499,94 @@
         <item quantity="one">%1$d item to buy</item>
         <item quantity="other">%1$d items to buy</item>
     </plurals>
+
+    <!-- Report pages: opened from the "see all" row on each summary card. -->
+    <string name="common_see_all">See all</string>
+    <string name="dashboard_see_all_trips">See every trip</string>
+    <string name="dashboard_see_all_items">See the full ranking</string>
+    <string name="dashboard_see_all_trend">Open and adjust</string>
+
+    <string name="report_range_month">This month</string>
+    <string name="report_range_three_months">3 months</string>
+    <string name="report_range_six_months">6 months</string>
+    <string name="report_range_all">All time</string>
+
+    <string name="report_title">Spending report</string>
+    <string name="report_subtitle">%1$d trips · %2$s</string>
+    <string name="report_stat_total">Total</string>
+    <string name="report_stat_trip_average">per trip</string>
+    <string name="report_stat_trips">Trips</string>
+    <string name="report_stat_trips_value">%1$d×</string>
+    <string name="report_stat_month_average">%1$s per month</string>
+    <string name="report_stat_highest">Biggest trip</string>
+    <string name="report_stat_highest_hint">tap to open it</string>
+    <string name="report_stat_months">Months</string>
+    <string name="report_stat_months_value">%1$d</string>
+    <string name="report_months_title">Month by month</string>
+    <string name="report_months_hint">tap a bar</string>
+    <string name="report_month_hint">%1$d trips · %2$s each</string>
+    <string name="report_month_delta_up">▲ %1$d%%</string>
+    <string name="report_month_delta_down">▼ %1$d%%</string>
+    <string name="report_month_delta_none">first month</string>
+    <string name="report_trips_title">Every trip</string>
+    <string name="report_trip_untitled">Shopping</string>
+    <string name="report_trip_subtitle">%1$s · %2$d items</string>
+    <string name="report_trip_subtitle_store">%1$s · %2$s · %3$d items</string>
+    <string name="report_empty_title">Nothing in this window</string>
+    <string name="report_empty_message">No trip was finished in the period you picked. Try a wider one.</string>
+
+    <string name="ranking_title">Biggest spending</string>
+    <string name="ranking_subtitle">%1$d trips · %2$s</string>
+    <string name="ranking_mode_item">By item</string>
+    <string name="ranking_mode_category">By category</string>
+    <string name="ranking_other">Everything else</string>
+    <string name="ranking_share_title">Where it went</string>
+    <string name="ranking_share_center_hint">of the total</string>
+    <string name="ranking_share_leader">%1$s alone is %2$d%% of it</string>
+    <string name="ranking_list_title">Ranking</string>
+    <string name="ranking_list_hint">%1$d entries</string>
+    <string name="ranking_entry_hint_item">bought %1$d× · %2$s each · %3$d%% of the total</string>
+    <string name="ranking_entry_hint_category">%1$d purchases · %2$d%% of the total</string>
+    <string name="ranking_trend_cta">tap for its price trend</string>
+    <string name="ranking_empty_title">Nothing in this window</string>
+    <string name="ranking_empty_message">No trip was finished in the period you picked. Try a wider one.</string>
+
+    <string name="trend_title">Price trend</string>
+    <string name="trend_change_item">Change item</string>
+    <string name="trend_picker_title">Pick an item</string>
+    <string name="trend_picker_search">Search items…</string>
+    <string name="trend_picker_empty">Nothing matches that.</string>
+    <string name="trend_candidate_hint">bought %1$d× · last %2$s</string>
+    <string name="trend_basis_title">How it is measured</string>
+    <string name="trend_basis_raw">Trip price</string>
+    <string name="trend_basis_per_unit">Unit price</string>
+    <string name="trend_basis_raw_note">Plain and dumb: what the item cost each trip. If the amount you buy changes, the line moves with it.</string>
+    <string name="trend_basis_per_unit_note">Price divided by quantity, so 0.5 kg and 2 kg compare properly. Trips with no quantity are left out until you fill one in.</string>
+    <string name="trend_base_unit_label">Quoted per</string>
+    <string name="trend_per_unit_blocked">No usable unit yet. Set a quantity on one of the purchases below first.</string>
+    <string name="trend_summary">%1$d points · from %2$s to %3$s</string>
+    <string name="trend_skipped">%1$d purchases skipped — they have no quantity yet</string>
+    <string name="trend_stat_cheapest">Cheapest</string>
+    <string name="trend_stat_dearest">Dearest</string>
+    <string name="trend_stat_average">Average</string>
+    <string name="trend_thin_title">Not enough to draw</string>
+    <string name="trend_thin_message">Two measurable purchases make a trend. Fill in the missing quantities below and the line appears.</string>
+    <string name="trend_history_title">Every purchase</string>
+    <string name="trend_history_hint">tap to set a quantity</string>
+    <string name="trend_row_qty">%1$s %2$s</string>
+    <string name="trend_row_no_qty">no quantity</string>
+    <string name="trend_row_adjusted">adjusted</string>
+    <string name="trend_row_needs_qty">needs a quantity</string>
+    <string name="trend_row_unit_price">%1$s / %2$s</string>
+    <string name="trend_sheet_title">Set the quantity</string>
+    <string name="trend_sheet_message">Only the price trend reads this. The receipt keeps exactly what you logged in the shop.</string>
+    <string name="trend_sheet_recorded">The trip recorded %1$s.</string>
+    <string name="trend_sheet_recorded_none">This trip recorded no quantity.</string>
+    <string name="trend_sheet_qty_label">Quantity</string>
+    <string name="trend_sheet_reset">Use what the receipt says</string>
+    <string name="trend_msg_invalid_qty">That quantity does not look right</string>
+    <string name="trend_msg_saved">Quantity saved</string>
+    <string name="trend_msg_cleared">Back to the receipt</string>
+    <string name="trend_empty_title">No trend yet</string>
+    <string name="trend_empty_message">Buy the same thing twice and its price trend shows up here.</string>
 </resources>

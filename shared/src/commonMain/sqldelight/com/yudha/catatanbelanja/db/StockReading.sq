@@ -1,0 +1,54 @@
+-- Every moment the app has ever *known* the quantity of a stock item, so the drain rate is
+-- measured from what actually happened rather than from a number the user is asked to invent.
+-- A row is written only when the quantity itself moved: re-saving a row to change its reminder
+-- threshold is not an observation about consumption.
+--
+-- `item_id` deliberately carries no REFERENCES clause. A migration file is analysed against the
+-- earlier migrations alone — never against these .sq files — so a foreign key onto stock_item
+-- cannot exist in 3.sqm, and a constraint that fresh installs enforce while upgraded ones do not
+-- is worse than none. StockDao clears an item's readings and rate alongside the item instead.
+CREATE TABLE stock_reading (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id TEXT NOT NULL,
+    qty     REAL NOT NULL,
+    unit    TEXT NOT NULL,
+    at      INTEGER NOT NULL,
+    source  TEXT NOT NULL   -- 'MANUAL' | 'CHECK' | 'PURCHASE'
+);
+
+CREATE INDEX stock_reading_item_at ON stock_reading(item_id, at);
+
+selectAll:
+SELECT *
+FROM stock_reading
+ORDER BY item_id ASC, at ASC, id ASC;
+
+selectByItemId:
+SELECT *
+FROM stock_reading
+WHERE item_id = ?
+ORDER BY at ASC, id ASC;
+
+insert:
+INSERT INTO stock_reading (item_id, qty, unit, at, source)
+VALUES (?, ?, ?, ?, ?);
+
+-- Keeps only the newest :keep readings of one item. History older than that says nothing about
+-- a habit the user has since changed, and an unbounded table would be paid for on every load.
+pruneItem:
+DELETE FROM stock_reading
+WHERE item_id = :itemId
+  AND id NOT IN (
+      SELECT id
+      FROM stock_reading
+      WHERE item_id = :itemId
+      ORDER BY at DESC, id DESC
+      LIMIT :keep
+  );
+
+deleteByItemId:
+DELETE FROM stock_reading
+WHERE item_id = ?;
+
+deleteAll:
+DELETE FROM stock_reading;

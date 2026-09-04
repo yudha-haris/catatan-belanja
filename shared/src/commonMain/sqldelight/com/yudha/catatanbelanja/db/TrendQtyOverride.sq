@@ -1,0 +1,39 @@
+-- A quantity the user typed in after the fact, for a purchase whose receipt recorded none (or
+-- recorded one in a unit the trend cannot use). Only the trend reads it; the receipt itself is
+-- never rewritten, so the history stays exactly what was logged in the shop.
+--
+-- No REFERENCES session_item(id): a migration is analysed against the migrations before it and
+-- never against the .sq files, so a foreign key here would compile on a fresh install and fail to
+-- in 2.sqm — leaving upgraded databases without the cascade that fresh ones enforce. SessionDao
+-- deletes these rows itself instead, in the same transaction that drops the items, which is what
+-- it already does for session_item under session.
+CREATE TABLE trend_qty_override (
+    item_id  TEXT NOT NULL PRIMARY KEY,
+    name_key TEXT NOT NULL,
+    qty      REAL NOT NULL,
+    unit     TEXT NOT NULL
+);
+
+CREATE INDEX trend_qty_override_name_key ON trend_qty_override(name_key);
+
+selectByName:
+SELECT *
+FROM trend_qty_override
+WHERE name_key = ?;
+
+upsert:
+INSERT OR REPLACE INTO trend_qty_override (item_id, name_key, qty, unit)
+VALUES (?, ?, ?, ?);
+
+deleteByItemId:
+DELETE FROM trend_qty_override
+WHERE item_id = ?;
+
+-- Stands in for the cascade: the ids are read back through session_item, which is still the
+-- authority on which purchases belong to a trip.
+deleteBySessionId:
+DELETE FROM trend_qty_override
+WHERE item_id IN (SELECT id FROM session_item WHERE session_id = ?);
+
+deleteAll:
+DELETE FROM trend_qty_override;

@@ -6,13 +6,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.pluralStringResource
 import com.yudha.catatanbelanja.R
+import com.yudha.catatanbelanja.android.designsystem.component.button.AppButton
+import com.yudha.catatanbelanja.android.designsystem.component.button.AppButtonVariant
+import com.yudha.catatanbelanja.android.designsystem.component.button.AppIconButton
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.LocalAppUi
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScaffold
+import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScreenHeader
 import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
 import com.yudha.catatanbelanja.android.screen.history.components.HistoryCompareBar
 import com.yudha.catatanbelanja.android.screen.history.components.HistoryEmptyContent
@@ -79,15 +86,47 @@ fun HistoryScreen(
         scrollable = false,
         contentPadding = PaddingValues(),
         bottomBar = compareBar,
+        header = {
+            AppScreenHeader(
+                title = stringResource(R.string.history_title),
+                subtitle = when (state.hasAny) {
+                    true -> pluralStringResource(
+                        R.plurals.history_session_count,
+                        state.sessionCount,
+                        state.sessionCount,
+                    )
+
+                    false -> null
+                },
+                actions = {
+                    if (state.hasAny) {
+                        AppButton(
+                            text = when (state.compareMode) {
+                                true -> stringResource(R.string.history_compare_cancel)
+                                false -> stringResource(R.string.history_compare_cta)
+                            },
+                            onClick = viewModel::toggleCompareMode,
+                            variant = AppButtonVariant.Ghost,
+                            emoji = COMPARE_EMOJI.takeIf { !state.compareMode },
+                            fillWidth = false,
+                        )
+                    }
+                    AppIconButton(
+                        onClick = onOpenSettings,
+                        contentDescription = stringResource(R.string.common_cd_settings),
+                        icon = Icons.Rounded.Settings,
+                    )
+                },
+            )
+        },
     ) {
         if (!state.hasAny) {
             // Don't flash "Belum ada riwayat" while the very first load is still in flight.
             val loaded = state.loadState is UiState.Success
             if (loaded) {
                 HistoryEmptyContent(
-                    onOpenSettings = onOpenSettings,
                     onSeedDemo = viewModel::seedDemo,
-                    modifier = Modifier.padding(AppTheme.shapes.screenPadding),
+                    modifier = Modifier.padding(AppTheme.shapes.listPadding),
                 )
             }
             return@AppScaffold
@@ -95,9 +134,7 @@ fun HistoryScreen(
 
         HistorySessionList(
             state = state,
-            onOpenSettings = onOpenSettings,
             onSessionClicked = viewModel::onSessionClicked,
-            onToggleCompareMode = viewModel::toggleCompareMode,
             onQuickCompare = viewModel::quickCompare,
             modifier = Modifier
                 .fillMaxWidth()
@@ -105,3 +142,5 @@ fun HistoryScreen(
         )
     }
 }
+
+private const val COMPARE_EMOJI = "⇄"

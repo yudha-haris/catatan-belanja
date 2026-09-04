@@ -28,6 +28,7 @@ internal fun DashboardTopSpendingCard(
     topItems: List<TopItem>,
     scope: DashboardScope,
     onSelectScope: (DashboardScope) -> Unit,
+    onSeeAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AppCard(modifier = modifier) {
@@ -70,5 +71,9 @@ internal fun DashboardTopSpendingCard(
                 showDivider = index < topItems.lastIndex,
             )
         }
+        DashboardSeeAllRow(
+            text = stringResource(R.string.dashboard_see_all_items),
+            onClick = onSeeAll,
+        )
     }
 }

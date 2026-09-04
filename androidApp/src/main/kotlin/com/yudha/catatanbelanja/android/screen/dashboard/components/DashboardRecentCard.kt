@@ -25,6 +25,7 @@ import com.yudha.catatanbelanja.features.dashboard.domain.model.SpendingBar
 internal fun DashboardRecentCard(
     bars: List<SpendingBar>,
     onOpenSessionDetail: (String) -> Unit,
+    onSeeAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chartBars = remember(bars) {
@@ -60,6 +61,10 @@ internal fun DashboardRecentCard(
         AppBarChart(
             bars = chartBars,
             onBarClick = { index -> onOpenSessionDetail(bars[index].sessionId) },
+        )
+        DashboardSeeAllRow(
+            text = stringResource(R.string.dashboard_see_all_trips),
+            onClick = onSeeAll,
         )
     }
 }

@@ -21,17 +21,25 @@ import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
 import com.yudha.catatanbelanja.android.format.toRupiah
 import com.yudha.catatanbelanja.android.format.toRupiahShort
 import com.yudha.catatanbelanja.android.format.toShortDateLabel
-import com.yudha.catatanbelanja.features.dashboard.domain.model.DashboardData
+import com.yudha.catatanbelanja.features.dashboard.domain.model.PriceTrendData
 
-/** "Tren harga": pick an item bought at least twice and watch its price move. */
+/**
+ * "Tren harga": pick an item bought at least twice and watch its price move.
+ *
+ * [trend] comes from the same use case the trend page uses, so an item the user switched to a unit
+ * price over there is drawn as a unit price here too — a card that quietly disagreed with the page
+ * it links to would be worse than no card.
+ */
 @Composable
 internal fun DashboardTrendCard(
-    data: DashboardData,
+    trend: PriceTrendData,
+    names: List<String>,
     onSelectTrendItem: (String) -> Unit,
+    onSeeAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val points = remember(data.trendPoints) {
-        data.trendPoints.map { point ->
+    val points = remember(trend.points) {
+        trend.points.map { point ->
             AppLineChartPoint(
                 valueLabel = point.price.toRupiahShort(),
                 dateLabel = point.endedAt.toShortDateLabel(),
@@ -42,13 +50,13 @@ internal fun DashboardTrendCard(
     val colors = AppTheme.colors
     // A dearer item than the first sample is the bad direction, so it reads coral.
     val deltaColor = when {
-        data.isTrendUp -> colors.coral
-        data.isTrendDown -> colors.mint
+        trend.isUp -> colors.coral
+        trend.isDown -> colors.mint
         else -> colors.inkTertiary
     }
-    val delta = when (data.isTrendUp) {
-        true -> stringResource(R.string.dashboard_trend_percent_up, data.trendDeltaPercent)
-        false -> stringResource(R.string.dashboard_trend_percent_down, data.trendDeltaPercent)
+    val delta = when (trend.isUp) {
+        true -> stringResource(R.string.dashboard_trend_percent_up, trend.deltaPercent)
+        false -> stringResource(R.string.dashboard_trend_percent_down, trend.deltaPercent)
     }
 
     AppCard(modifier = modifier) {
@@ -61,12 +69,18 @@ internal fun DashboardTrendCard(
         )
         Spacer(Modifier.height(Spacing.x10))
         AppUnitDropdown(
-            value = data.trendName.orEmpty(),
+            value = trend.name,
             onValueChange = onSelectTrendItem,
-            units = data.trendableNames,
+            units = names,
         )
 
-        if (!data.hasTrend) return@AppCard
+        if (!trend.hasTrend) {
+            DashboardSeeAllRow(
+                text = stringResource(R.string.dashboard_see_all_trend),
+                onClick = onSeeAll,
+            )
+            return@AppCard
+        }
 
         Spacer(Modifier.height(Spacing.x8))
         AppLineChart(points = points)
@@ -78,13 +92,17 @@ internal fun DashboardTrendCard(
             Text(
                 text = stringResource(
                     R.string.dashboard_trend_summary,
-                    data.trendPoints.size,
-                    data.trendFirstPrice.toRupiah(),
-                    data.trendLastPrice.toRupiah(),
+                    trend.usableCount,
+                    trend.firstValue.toRupiah(),
+                    trend.lastValue.toRupiah(),
                 ),
                 style = AppTheme.typography.tiny,
             )
             Text(text = delta, style = AppTheme.typography.fieldLabel, color = deltaColor)
         }
+        DashboardSeeAllRow(
+            text = stringResource(R.string.dashboard_see_all_trend),
+            onClick = onSeeAll,
+        )
     }
 }

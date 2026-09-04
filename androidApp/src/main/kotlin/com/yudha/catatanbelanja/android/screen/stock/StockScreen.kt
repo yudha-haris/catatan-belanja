@@ -38,8 +38,10 @@ import com.yudha.catatanbelanja.android.screen.stock.components.StockCheckSheet
 import com.yudha.catatanbelanja.android.screen.stock.components.StockEditorSheet
 import com.yudha.catatanbelanja.android.screen.stock.components.StockLogRow
 import com.yudha.catatanbelanja.android.screen.stock.components.StockLogSheet
+import com.yudha.catatanbelanja.android.screen.stock.components.StockRateSheet
 import com.yudha.catatanbelanja.android.screen.stock.components.StockRowItem
 import com.yudha.catatanbelanja.core.common.UiState
+import com.yudha.catatanbelanja.core.domain.model.RateMode
 import com.yudha.catatanbelanja.features.stock.presentation.StockEffect
 import com.yudha.catatanbelanja.features.stock.presentation.StockViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -69,6 +71,16 @@ fun StockScreen(
                     appUi.showToast(context.getString(R.string.stock_toast_deleted))
                 is StockEffect.ItemMarkedEmpty ->
                     appUi.showToast(context.getString(R.string.stock_toast_marked_empty, effect.name))
+                is StockEffect.EstimateHit -> {
+                    // The app made a prediction and the user just proved it right. Saying so is
+                    // the whole reason the estimate is allowed to be a guess in the first place.
+                    appUi.celebrate()
+                    appUi.showToast(
+                        context.getString(R.string.stock_estimate_hit, effect.accuracyPercent),
+                    )
+                }
+                is StockEffect.RateSaved ->
+                    appUi.showToast(context.getString(effect.mode.toastRes()))
                 is StockEffect.CheckSaved -> {
                     appUi.celebrate()
                     appUi.showToast(
@@ -102,35 +114,38 @@ fun StockScreen(
         modifier = modifier,
         contentPadding = PaddingValues(0.dp),
         scrollable = false,
+        header = {
+            AppScreenHeader(
+                title = stringResource(R.string.stock_title),
+                subtitle = context.stockSubtitle(
+                    total = state.totalCount,
+                    low = state.lowCount,
+                    maybeLow = state.maybeLowCount,
+                ),
+                actions = {
+                    AppIconButton(
+                        onClick = {
+                            editorEmoji = ""
+                            viewModel.openEditor(null)
+                        },
+                        contentDescription = stringResource(R.string.common_cd_add),
+                        emoji = "＋",
+                        tint = AppTheme.colors.primary,
+                    )
+                    AppIconButton(
+                        onClick = onOpenSettings,
+                        contentDescription = stringResource(R.string.common_cd_settings),
+                        icon = Icons.Rounded.Settings,
+                    )
+                },
+            )
+        },
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = AppTheme.shapes.screenPadding,
+            contentPadding = AppTheme.shapes.listPadding,
             verticalArrangement = Arrangement.spacedBy(Spacing.x8),
         ) {
-            item(key = "header") {
-                AppScreenHeader(
-                    title = stringResource(R.string.stock_title),
-                    subtitle = context.stockSubtitle(state.totalCount, state.lowCount),
-                    actions = {
-                        AppIconButton(
-                            onClick = {
-                                editorEmoji = ""
-                                viewModel.openEditor(null)
-                            },
-                            contentDescription = stringResource(R.string.common_cd_add),
-                            emoji = "＋",
-                            tint = AppTheme.colors.primary,
-                        )
-                        AppIconButton(
-                            onClick = onOpenSettings,
-                            contentDescription = stringResource(R.string.common_cd_settings),
-                            icon = Icons.Rounded.Settings,
-                        )
-                    },
-                )
-            }
-
             if (!state.hasAny) {
                 item(key = "empty") {
                     AppEmptyState(
@@ -224,12 +239,33 @@ fun StockScreen(
             unit = state.editorUnit,
             units = state.units,
             knownNames = state.knownNames,
+            shadow = state.editorShadow,
+            rateMode = state.editorRateMode,
+            autoEstimate = state.editorAutoEstimate,
             enabled = !isBusy,
             onNameChanged = viewModel::onEditorNameChanged,
             onSave = viewModel::saveStockItem,
             onMarkEmpty = viewModel::markEditorItemEmpty,
+            onOpenRate = viewModel::openRateSheet,
             onDelete = viewModel::deleteEditorItem,
             onDismiss = viewModel::closeEditor,
+        )
+    }
+
+    val rateItem = state.editorItem
+    if (state.isRateOpen && rateItem != null) {
+        StockRateSheet(
+            itemName = rateItem.name,
+            emoji = editorEmoji,
+            mode = state.editorRateMode,
+            manualQty = state.rateManualQty,
+            manualUnit = state.rateManualUnit,
+            manualPeriod = state.rateManualPeriod,
+            units = state.units,
+            autoEstimate = state.editorAutoEstimate,
+            enabled = !isBusy,
+            onSave = viewModel::saveRate,
+            onDismiss = viewModel::closeRateSheet,
         )
     }
 
@@ -255,10 +291,22 @@ fun StockScreen(
     )
 }
 
-/** "12 barang", plus the prototype's "· 3 perlu dibeli" tail once something needs buying. */
-private fun Context.stockSubtitle(total: Int, low: Int): String {
+/**
+ * "12 barang", plus the prototype's "· 3 perlu dibeli" tail once something needs buying, and
+ * failing that a quieter "· 2 mungkin menipis" for what only the estimate is worried about. The
+ * counted shortage always wins the slot: it is the one the user can act on without doubt.
+ */
+private fun Context.stockSubtitle(total: Int, low: Int, maybeLow: Int): String {
     val items = resources.getQuantityString(R.plurals.common_item_count, total, total)
-    if (low == 0) return items
     val dot = getString(R.string.common_separator_dot)
-    return "$items $dot ${getString(R.string.stock_subtitle_low, low)}"
+    if (low > 0) return "$items $dot ${getString(R.string.stock_subtitle_low, low)}"
+    if (maybeLow > 0) return "$items $dot ${getString(R.string.stock_subtitle_maybe_low, maybeLow)}"
+    return items
+}
+
+/** Each mode confirms itself in its own words; "saved" would not say what is now in force. */
+private fun RateMode.toastRes(): Int = when (this) {
+    RateMode.AUTO -> R.string.stock_rate_toast_auto
+    RateMode.MANUAL -> R.string.stock_rate_toast_manual
+    RateMode.OFF -> R.string.stock_rate_toast_off
 }

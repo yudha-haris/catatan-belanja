@@ -1,0 +1,27 @@
+-- v3 -> v4: smart stock. The app can already say how much of something was in the house the last
+-- time anyone looked; these two tables let it say how much is *probably* there now.
+--
+-- Byte-identical to the CREATE statements in StockReading.sq / StockRate.sq, which fresh installs
+-- run instead of this file. Neither table declares a foreign key onto stock_item: a migration is
+-- analysed against the earlier migrations only, so stock_item is not a name this file may use.
+-- Backfilling the readings of existing users is done in Kotlin for the same reason — see
+-- StockRepositoryImpl.getReadings(), which can match names the way the rest of the app does.
+CREATE TABLE stock_reading (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id TEXT NOT NULL,
+    qty     REAL NOT NULL,
+    unit    TEXT NOT NULL,
+    at      INTEGER NOT NULL,
+    source  TEXT NOT NULL
+);
+
+CREATE INDEX stock_reading_item_at ON stock_reading(item_id, at);
+
+CREATE TABLE stock_rate (
+    item_id       TEXT NOT NULL PRIMARY KEY,
+    mode          TEXT NOT NULL DEFAULT 'AUTO',
+    manual_qty    REAL,
+    manual_unit   TEXT,
+    manual_period TEXT,
+    updated_at    INTEGER NOT NULL
+);

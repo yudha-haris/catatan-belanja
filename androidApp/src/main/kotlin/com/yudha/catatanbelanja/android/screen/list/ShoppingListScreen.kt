@@ -148,35 +148,34 @@ fun ShoppingListScreen(
         modifier = modifier,
         scrollable = false,
         contentPadding = PaddingValues(0.dp),
+        header = {
+            AppScreenHeader(
+                title = stringResource(R.string.list_title),
+                subtitle = when (state.totalCount) {
+                    0 -> stringResource(R.string.list_subtitle_empty)
+                    else -> stringResource(
+                        R.string.list_subtitle_progress,
+                        state.checkedCount,
+                        state.totalCount,
+                    )
+                },
+                onBack = onBack,
+                actions = {
+                    if (!state.hasList) return@AppScreenHeader
+                    AppIconButton(
+                        onClick = { showMenuSheet = true },
+                        contentDescription = stringResource(R.string.list_menu_cd),
+                        emoji = "⋯",
+                    )
+                },
+            )
+        },
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = AppTheme.shapes.screenPadding,
+            contentPadding = AppTheme.shapes.listPadding,
             verticalArrangement = Arrangement.spacedBy(Spacing.x8),
         ) {
-            item(key = "header") {
-                AppScreenHeader(
-                    title = stringResource(R.string.list_title),
-                    subtitle = when (state.totalCount) {
-                        0 -> stringResource(R.string.list_subtitle_empty)
-                        else -> stringResource(
-                            R.string.list_subtitle_progress,
-                            state.checkedCount,
-                            state.totalCount,
-                        )
-                    },
-                    onBack = onBack,
-                    actions = {
-                        if (!state.hasList) return@AppScreenHeader
-                        AppIconButton(
-                            onClick = { showMenuSheet = true },
-                            contentDescription = stringResource(R.string.list_menu_cd),
-                            emoji = "⋯",
-                        )
-                    },
-                )
-            }
-
             if (!state.hasList) {
                 item(key = "empty") {
                     AppEmptyState(

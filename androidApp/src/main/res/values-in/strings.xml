@@ -331,6 +331,50 @@
     <string name="stock_toast_deleted">Dihapus dari stok</string>
     <string name="stock_toast_marked_empty">%1$s ditandai habis</string>
 
+    <!-- smart stock: perkiraan yang ditaruh di samping jumlah tersimpan, dan kecepatan pakainya -->
+    <string name="stock_row_estimate">≈ sisa %1$s %2$s sekarang</string>
+    <string name="stock_maybe_low">mungkin menipis</string>
+    <string name="stock_subtitle_maybe_low">%1$d mungkin menipis</string>
+    <string name="stock_estimate_hit">Perkiraan %1$d%% tepat 🎯</string>
+    <string name="stock_check_previous_estimate">sebelumnya %1$s %2$s · perkiraan ≈ %3$s</string>
+
+    <string name="stock_smart_title">Kira-kira sisa sekarang</string>
+    <string name="stock_smart_apply">Pakai</string>
+    <string name="stock_smart_basis">sekitar %1$s %2$s per hari · %3$s</string>
+    <string name="stock_smart_days_left">habis ~%1$d hari lagi</string>
+    <string name="stock_smart_days_left_none">mungkin sudah habis</string>
+    <string name="stock_smart_since">terakhir dicatat %1$d hari lalu</string>
+    <string name="stock_smart_confidence_low">masih belajar</string>
+    <string name="stock_smart_confidence_medium">makin akurat</string>
+    <string name="stock_smart_confidence_high">cukup yakin</string>
+    <string name="stock_smart_confidence_exact">kamu yang atur</string>
+
+    <string name="stock_rate_row_label">Kecepatan pakai</string>
+    <string name="stock_rate_per_day">%1$s %2$s/hari</string>
+    <string name="stock_rate_value_auto">Otomatis · %1$s</string>
+    <string name="stock_rate_value_auto_learning">Otomatis · masih belajar</string>
+    <string name="stock_rate_value_manual">Diatur sendiri · %1$s</string>
+    <string name="stock_rate_value_manual_plain">Diatur sendiri</string>
+    <string name="stock_rate_value_off">Mati</string>
+    <string name="stock_rate_sheet_title">Kecepatan pakai</string>
+    <string name="stock_rate_mode_auto">Otomatis</string>
+    <string name="stock_rate_mode_manual">Atur sendiri</string>
+    <string name="stock_rate_mode_off">Matikan</string>
+    <string name="stock_rate_hint_auto">Aplikasi menghitung sendiri dari perubahan stok barang ini. Tidak ada yang perlu diisi.</string>
+    <string name="stock_rate_hint_manual">Isi kira-kira seberapa cepat habis. Ini selalu dipakai daripada tebakan otomatis.</string>
+    <string name="stock_rate_hint_off">Tidak ada perkiraan untuk barang ini. Jumlahnya berubah hanya kalau kamu yang ubah.</string>
+    <string name="stock_rate_auto_found">Dari catatanmu: sekitar %1$s %2$s per hari, dari %3$d perubahan.</string>
+    <string name="stock_rate_auto_none">Catatannya belum cukup. Perbarui barang ini beberapa kali, nanti kecepatannya ketahuan sendiri.</string>
+    <string name="stock_rate_qty_label">Terpakai sekitar</string>
+    <string name="stock_rate_qty_placeholder">mis. 1</string>
+    <string name="stock_rate_period_label">per</string>
+    <string name="stock_rate_period_day">hari</string>
+    <string name="stock_rate_period_week">minggu</string>
+    <string name="stock_rate_period_month">bulan</string>
+    <string name="stock_rate_toast_auto">Kembali ke otomatis</string>
+    <string name="stock_rate_toast_manual">Kecepatan pakai tersimpan</string>
+    <string name="stock_rate_toast_off">Perkiraan dimatikan</string>
+
     <!-- end-of-month stock check -->
     <string name="stock_check_cta">Cek sisa stok akhir bulan</string>
     <string name="stock_check_cta_hint">Isi sisa semua barang sekaligus, tersimpan sebagai catatan bulanan</string>
@@ -452,4 +496,94 @@
         <item quantity="one">%1$d barang perlu dibeli</item>
         <item quantity="other">%1$d barang perlu dibeli</item>
     </plurals>
+
+    <!-- Halaman laporan: dibuka dari baris "lihat semua" di tiap kartu ringkasan. -->
+    <string name="common_see_all">Lihat semua</string>
+    <string name="dashboard_see_all_trips">Lihat semua belanja</string>
+    <string name="dashboard_see_all_items">Lihat peringkat lengkap</string>
+    <string name="dashboard_see_all_trend">Buka &amp; atur</string>
+
+    <string name="report_range_month">Bulan ini</string>
+    <string name="report_range_three_months">3 bulan</string>
+    <string name="report_range_six_months">6 bulan</string>
+    <string name="report_range_all">Semua</string>
+
+    <string name="report_title">Laporan belanja</string>
+    <string name="report_subtitle">%1$d belanja · %2$s</string>
+    <string name="report_stat_total">Total</string>
+    <string name="report_stat_trip_average">per belanja</string>
+    <string name="report_stat_trips">Belanja</string>
+    <string name="report_stat_trips_value">%1$d×</string>
+    <string name="report_stat_month_average">%1$s per bulan</string>
+    <string name="report_stat_highest">Belanja terbesar</string>
+    <string name="report_stat_highest_hint">ketuk buat buka</string>
+    <string name="report_stat_months">Bulan</string>
+    <string name="report_stat_months_value">%1$d</string>
+    <string name="report_months_title">Per bulan</string>
+    <string name="report_months_hint">ketuk batang</string>
+    <string name="report_month_hint">%1$d belanja · %2$s sekali jalan</string>
+    <string name="report_month_delta_up">▲ %1$d%%</string>
+    <string name="report_month_delta_down">▼ %1$d%%</string>
+    <string name="report_month_delta_none">bulan pertama</string>
+    <string name="report_trips_title">Semua belanja</string>
+    <string name="report_trip_untitled">Belanja</string>
+    <string name="report_trip_subtitle">%1$s · %2$d barang</string>
+    <string name="report_trip_subtitle_store">%1$s · %2$s · %3$d barang</string>
+    <string name="report_empty_title">Belum ada di rentang ini</string>
+    <string name="report_empty_message">Nggak ada belanja yang selesai di periode itu. Coba pilih rentang yang lebih panjang.</string>
+
+    <string name="ranking_title">Pengeluaran terbesar</string>
+    <string name="ranking_subtitle">%1$d belanja · %2$s</string>
+    <string name="ranking_mode_item">Per barang</string>
+    <string name="ranking_mode_category">Per kategori</string>
+    <string name="ranking_other">Lain-lain</string>
+    <string name="ranking_share_title">Larinya ke mana</string>
+    <string name="ranking_share_center_hint">dari total</string>
+    <string name="ranking_share_leader">%1$s sendiri sudah %2$d%%</string>
+    <string name="ranking_list_title">Peringkat</string>
+    <string name="ranking_list_hint">%1$d baris</string>
+    <string name="ranking_entry_hint_item">%1$d× dibeli · %2$s sekali beli · %3$d%% dari total</string>
+    <string name="ranking_entry_hint_category">%1$d pembelian · %2$d%% dari total</string>
+    <string name="ranking_trend_cta">ketuk buat lihat tren harganya</string>
+    <string name="ranking_empty_title">Belum ada di rentang ini</string>
+    <string name="ranking_empty_message">Nggak ada belanja yang selesai di periode itu. Coba pilih rentang yang lebih panjang.</string>
+
+    <string name="trend_title">Tren harga</string>
+    <string name="trend_change_item">Ganti barang</string>
+    <string name="trend_picker_title">Pilih barang</string>
+    <string name="trend_picker_search">Cari barang…</string>
+    <string name="trend_picker_empty">Nggak ada yang cocok.</string>
+    <string name="trend_candidate_hint">%1$d× dibeli · terakhir %2$s</string>
+    <string name="trend_basis_title">Cara hitungnya</string>
+    <string name="trend_basis_raw">Harga belanja</string>
+    <string name="trend_basis_per_unit">Harga satuan</string>
+    <string name="trend_basis_raw_note">Apa adanya: total yang dibayar tiap belanja. Kalau jumlah yang dibeli berubah-ubah, grafiknya ikut naik-turun.</string>
+    <string name="trend_basis_per_unit_note">Harga dibagi jumlah, jadi 0,5 kg dan 2 kg bisa dibandingkan. Belanja yang belum ada jumlahnya dilewati sampai kamu isi.</string>
+    <string name="trend_base_unit_label">Dihitung per</string>
+    <string name="trend_per_unit_blocked">Belum ada satuan yang bisa dipakai. Isi dulu jumlah di salah satu belanja di bawah.</string>
+    <string name="trend_summary">%1$d data · dari %2$s ke %3$s</string>
+    <string name="trend_skipped">%1$d belanja dilewati — jumlahnya belum diisi</string>
+    <string name="trend_stat_cheapest">Termurah</string>
+    <string name="trend_stat_dearest">Termahal</string>
+    <string name="trend_stat_average">Rata-rata</string>
+    <string name="trend_thin_title">Datanya belum cukup</string>
+    <string name="trend_thin_message">Butuh dua pembelian yang bisa dihitung. Isi jumlah yang kosong di bawah, nanti garisnya muncul.</string>
+    <string name="trend_history_title">Riwayat pembelian</string>
+    <string name="trend_history_hint">ketuk buat atur jumlah</string>
+    <string name="trend_row_qty">%1$s %2$s</string>
+    <string name="trend_row_no_qty">tanpa jumlah</string>
+    <string name="trend_row_adjusted">diatur manual</string>
+    <string name="trend_row_needs_qty">perlu jumlah</string>
+    <string name="trend_row_unit_price">%1$s / %2$s</string>
+    <string name="trend_sheet_title">Atur jumlah</string>
+    <string name="trend_sheet_message">Cuma dipakai buat hitung tren harga. Struknya tetap seperti yang kamu catat di toko.</string>
+    <string name="trend_sheet_recorded">Tercatat %1$s.</string>
+    <string name="trend_sheet_recorded_none">Belanja ini nggak mencatat jumlah.</string>
+    <string name="trend_sheet_qty_label">Jumlah</string>
+    <string name="trend_sheet_reset">Pakai catatan aslinya</string>
+    <string name="trend_msg_invalid_qty">Jumlahnya belum benar</string>
+    <string name="trend_msg_saved">Jumlah disimpan</string>
+    <string name="trend_msg_cleared">Balik ke catatan asli</string>
+    <string name="trend_empty_title">Belum ada tren</string>
+    <string name="trend_empty_message">Beli barang yang sama minimal dua kali, nanti tren harganya muncul di sini.</string>
 </resources>

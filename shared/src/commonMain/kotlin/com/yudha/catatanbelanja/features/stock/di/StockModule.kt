@@ -4,7 +4,11 @@ import com.yudha.catatanbelanja.features.stock.domain.usecase.BuildKnownStockNam
 import com.yudha.catatanbelanja.features.stock.domain.usecase.BuildStockRows
 import com.yudha.catatanbelanja.features.stock.domain.usecase.CalculateStockUsage
 import com.yudha.catatanbelanja.features.stock.domain.usecase.CreateStockItem
+import com.yudha.catatanbelanja.features.stock.domain.usecase.CreateStockRate
 import com.yudha.catatanbelanja.features.stock.domain.usecase.CurrentStockCheckStamp
+import com.yudha.catatanbelanja.features.stock.domain.usecase.EstimateCurrentStock
+import com.yudha.catatanbelanja.features.stock.domain.usecase.EstimateStockRate
+import com.yudha.catatanbelanja.features.stock.domain.usecase.ScoreStockEstimate
 import com.yudha.catatanbelanja.features.stock.presentation.StockViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -16,6 +20,10 @@ val stockModule: Module = module {
     factoryOf(::BuildKnownStockNames)
     factoryOf(::CalculateStockUsage)
     factoryOf(::CreateStockItem)
+    factoryOf(::CreateStockRate)
     factoryOf(::CurrentStockCheckStamp)
+    factoryOf(::EstimateCurrentStock)
+    factoryOf(::EstimateStockRate)
+    factoryOf(::ScoreStockEstimate)
     factoryOf(::StockViewModel)
 }

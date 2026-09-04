@@ -1,0 +1,24 @@
+-- How the price trend of one item is measured. Keyed by the *normalized* name, so "Beras" and
+-- "beras " share one setting. A name with no row here is read as the default: RAW.
+CREATE TABLE trend_setting (
+    name_key   TEXT NOT NULL PRIMARY KEY,
+    basis      TEXT NOT NULL DEFAULT 'RAW',   -- 'RAW' | 'PER_UNIT'
+    base_unit  TEXT,                          -- the unit a PER_UNIT price is quoted in
+    updated_at INTEGER NOT NULL
+);
+
+selectByName:
+SELECT *
+FROM trend_setting
+WHERE name_key = ?;
+
+upsert:
+INSERT OR REPLACE INTO trend_setting (name_key, basis, base_unit, updated_at)
+VALUES (?, ?, ?, ?);
+
+deleteByName:
+DELETE FROM trend_setting
+WHERE name_key = ?;
+
+deleteAll:
+DELETE FROM trend_setting;

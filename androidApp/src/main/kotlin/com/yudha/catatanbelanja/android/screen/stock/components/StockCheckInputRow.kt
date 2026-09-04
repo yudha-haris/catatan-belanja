@@ -55,12 +55,24 @@ internal fun StockCheckInputRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                // The estimate is shown but never pre-filled. This sheet is where the app finds
+                // out what is actually on the shelf; a line that arrives already holding a guess
+                // gets confirmed rather than checked, and the estimator would then be learning
+                // from its own output.
                 Text(
-                    text = stringResource(
-                        R.string.stock_check_previous,
-                        row.previousQty.toQtyLabel(),
-                        row.unit,
-                    ),
+                    text = when (row.estimatedQty) {
+                        null -> stringResource(
+                            R.string.stock_check_previous,
+                            row.previousQty.toQtyLabel(),
+                            row.unit,
+                        )
+                        else -> stringResource(
+                            R.string.stock_check_previous_estimate,
+                            row.previousQty.toQtyLabel(),
+                            row.unit,
+                            row.estimatedQty.toQtyLabel(),
+                        )
+                    },
                     style = AppTheme.typography.tiny,
                     color = colors.inkTertiary,
                     maxLines = 1,

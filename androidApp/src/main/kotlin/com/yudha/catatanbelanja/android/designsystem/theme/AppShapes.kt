@@ -29,6 +29,10 @@ data class AppShapes(
     val pill: Dp = 999.dp,
     val maxContentWidth: Dp = 440.dp,
     val screenPadding: PaddingValues = PaddingValues(start = 16.dp, top = 18.dp, end = 16.dp, bottom = 150.dp),
+    /** [screenPadding] without the top gap — for a list that scrolls under a pinned header. */
+    val listPadding: PaddingValues = PaddingValues(start = 16.dp, end = 16.dp, bottom = 150.dp),
+    /** The pinned header's own inset, matching [screenPadding] on the three sides it covers. */
+    val headerPadding: PaddingValues = PaddingValues(start = 16.dp, top = 18.dp, end = 16.dp),
     /** `0 10px 30px -12px rgba(ink,.18)` from the prototype. */
     val cardShadow: AppShadow = AppShadow(elevation = 10.dp, ambientAlpha = 0.18f, spotAlpha = 0.18f),
     /** `0 12px 40px -10px rgba(ink,.30)` — the floating tab bar sits higher off the page. */

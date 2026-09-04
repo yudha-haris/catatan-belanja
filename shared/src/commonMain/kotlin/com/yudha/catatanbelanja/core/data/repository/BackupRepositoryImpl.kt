@@ -17,6 +17,7 @@ import com.yudha.catatanbelanja.core.data.database.SessionDao
 import com.yudha.catatanbelanja.core.data.database.SettingsDao
 import com.yudha.catatanbelanja.core.data.database.ShoppingListDao
 import com.yudha.catatanbelanja.core.data.database.StockDao
+import com.yudha.catatanbelanja.core.data.database.TrendDao
 import com.yudha.catatanbelanja.core.domain.model.ImportSummary
 import com.yudha.catatanbelanja.core.domain.model.ShoppingItem
 import com.yudha.catatanbelanja.core.domain.model.ShoppingList
@@ -39,6 +40,7 @@ class BackupRepositoryImpl(
     private val stockDao: StockDao,
     private val settingsDao: SettingsDao,
     private val shoppingListDao: ShoppingListDao,
+    private val trendDao: TrendDao,
     private val codec: BackupCodec,
     private val demoDataFactory: DemoDataFactory,
     private val clock: Clock,
@@ -94,6 +96,10 @@ class BackupRepositoryImpl(
         stockDao.deleteAllStockItems()
         stockDao.deleteAllCheckLogs()
         shoppingListDao.deleteAllLists()
+        // The session rows are gone, so the overrides cascaded with them; this drops the
+        // per-item settings, which hang off names rather than rows and would otherwise
+        // outlive every receipt they described.
+        trendDao.deleteAll()
     }
 
     override suspend fun seedDemoData(): Resource<Unit> = resourceOf(MSG_SEED) {

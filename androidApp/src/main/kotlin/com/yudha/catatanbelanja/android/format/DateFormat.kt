@@ -18,6 +18,7 @@ private val longDateFormatter: DateTimeFormatter = patternOf("EEEE, d MMMM yyyy"
 private val timeFormatter: DateTimeFormatter = patternOf("HH.mm")
 private val shortDateFormatter: DateTimeFormatter = patternOf("d MMM")
 private val monthFormatter: DateTimeFormatter = patternOf("MMMM yyyy")
+private val shortMonthFormatter: DateTimeFormatter = patternOf("MMM")
 
 private fun Long.atSystemZone(): ZonedDateTime =
     Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault())
@@ -42,4 +43,14 @@ fun String.monthKeyToLabel(): String {
         return this
     }
     return monthFormatter.format(month)
+}
+
+/** "2026-09" -> "Sep". The chart-axis form of [monthKeyToLabel] — a bar is 30dp wide. */
+fun String.monthKeyToShortLabel(): String {
+    val month = try {
+        YearMonth.parse(this)
+    } catch (error: DateTimeParseException) {
+        return this
+    }
+    return shortMonthFormatter.format(month)
 }

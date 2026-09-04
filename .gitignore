@@ -10,3 +10,4 @@ local.properties
 # that Android accepts as this app.
 catatan-belanja-release.jks
 keystore.properties
+dist/

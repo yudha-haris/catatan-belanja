@@ -15,6 +15,11 @@ class SessionDao(
     private val sessions = database.sessionQueries
     private val items = database.sessionItemQueries
 
+    // The price-trend corrections hang off session items but carry no foreign key (see
+    // TrendQtyOverride.sq), so every delete below takes them with it inside the same
+    // transaction. A correction that outlived its receipt would be invisible and permanent.
+    private val trendOverrides = database.trendQtyOverrideQueries
+
     suspend fun getFinishedSessions(): List<ShoppingSession> = withContext(dispatcher) {
         hydrate(sessions.selectFinished().executeAsList())
     }
@@ -70,6 +75,7 @@ class SessionDao(
 
     suspend fun deleteSession(sessionId: String) = withContext(dispatcher) {
         database.transaction {
+            trendOverrides.deleteBySessionId(sessionId)
             items.deleteBySessionId(sessionId)
             sessions.deleteById(sessionId)
         }
@@ -77,6 +83,7 @@ class SessionDao(
 
     suspend fun deleteAllSessions() = withContext(dispatcher) {
         database.transaction {
+            trendOverrides.deleteAll()
             items.deleteAll()
             sessions.deleteAll()
         }
@@ -87,20 +94,31 @@ class SessionDao(
             insertItemRow(sessionId, item, position)
         }
 
+    /**
+     * Editing the receipt drops any price-trend correction for that item. The correction only ever
+     * stood in for what the receipt failed to record; once the receipt itself has been rewritten it
+     * is a stale second opinion, and a stale one the user cannot see from the edit sheet.
+     */
     suspend fun updateItem(sessionId: String, item: ShoppingItem) = withContext(dispatcher) {
-        items.update(
-            name = item.name,
-            qty = item.qty,
-            unit = item.unit,
-            price = item.price.toLong(),
-            note = item.note,
-            id = item.id,
-            sessionId = sessionId,
-        )
+        database.transaction {
+            items.update(
+                name = item.name,
+                qty = item.qty,
+                unit = item.unit,
+                price = item.price.toLong(),
+                note = item.note,
+                id = item.id,
+                sessionId = sessionId,
+            )
+            trendOverrides.deleteByItemId(item.id)
+        }
     }
 
     suspend fun deleteItem(sessionId: String, itemId: String) = withContext(dispatcher) {
-        items.deleteById(id = itemId, sessionId = sessionId)
+        database.transaction {
+            trendOverrides.deleteByItemId(itemId)
+            items.deleteById(id = itemId, sessionId = sessionId)
+        }
     }
 
     private fun insertItemRow(sessionId: String, item: ShoppingItem, position: Long) {

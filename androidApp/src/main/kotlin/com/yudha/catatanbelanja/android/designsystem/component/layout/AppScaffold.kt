@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -20,12 +22,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
 
 /**
- * Screen shell: a centred column capped at 440.dp with the standard screen padding, an optional
- * scrolling [header] and a floating [bottomBar] pinned above the navigation bar.
+ * Screen shell: a centred column capped at 440.dp with the standard screen padding, a pinned
+ * [header] and a floating [bottomBar] pinned above the navigation bar.
+ *
+ * The header sits outside the scrolling area, so the back pill and the screen's actions stay
+ * reachable however far the content below has been scrolled. It carries its own inset —
+ * [contentPadding]'s top gap is dropped whenever a header is present, or the two would stack.
  *
  * The content area shrinks for the keyboard; [bottomBar] does not, so the pinned action bar hides
  * behind the keyboard rather than eating a third of what is left to type into.
@@ -40,6 +47,16 @@ fun AppScaffold(
     scrollable: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+    val bodyPadding = when (header) {
+        null -> contentPadding
+        else -> PaddingValues(
+            start = contentPadding.calculateStartPadding(layoutDirection),
+            end = contentPadding.calculateEndPadding(layoutDirection),
+            bottom = contentPadding.calculateBottomPadding(),
+        )
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -55,12 +72,21 @@ fun AppScaffold(
                 // the manifest's `adjustResize` is inert. Without this the scroll viewport keeps
                 // its full height, and a field that takes focus has nowhere to scroll into — it
                 // just sits under the keyboard, which is what moving focus to "Harga" looked like.
-                .imePadding()
-                .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                .padding(contentPadding),
+                .imePadding(),
         ) {
-            if (header != null) header()
-            content()
+            if (header != null) {
+                Box(modifier = Modifier.padding(AppTheme.shapes.headerPadding)) { header() }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier,
+                    )
+                    .padding(bodyPadding),
+                content = content,
+            )
         }
 
         if (bottomBar == null) return@Box

@@ -1,0 +1,32 @@
+-- How fast one stock item is used up, and who decides. A stock item with no row here is read as
+-- the default: AUTO, meaning the rate is inferred from stock_reading and nothing is asked of the
+-- user. Only 'MANUAL' uses the three manual_* columns.
+-- `item_id` carries no REFERENCES clause, for the reason spelled out in StockReading.sq.
+CREATE TABLE stock_rate (
+    item_id       TEXT NOT NULL PRIMARY KEY,
+    mode          TEXT NOT NULL DEFAULT 'AUTO',   -- 'AUTO' | 'MANUAL' | 'OFF'
+    manual_qty    REAL,
+    manual_unit   TEXT,
+    manual_period TEXT,                           -- 'DAY' | 'WEEK' | 'MONTH'
+    updated_at    INTEGER NOT NULL
+);
+
+selectAll:
+SELECT *
+FROM stock_rate;
+
+selectByItemId:
+SELECT *
+FROM stock_rate
+WHERE item_id = ?;
+
+upsert:
+INSERT OR REPLACE INTO stock_rate (item_id, mode, manual_qty, manual_unit, manual_period, updated_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteByItemId:
+DELETE FROM stock_rate
+WHERE item_id = ?;
+
+deleteAll:
+DELETE FROM stock_rate;

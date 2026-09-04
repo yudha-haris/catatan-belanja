@@ -31,6 +31,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun DashboardScreen(
     onOpenSessionDetail: (String) -> Unit,
+    onOpenSpendingReport: () -> Unit,
+    onOpenSpendingRanking: () -> Unit,
+    onOpenPriceTrend: (String?) -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = koinViewModel(),
@@ -92,17 +95,27 @@ fun DashboardScreen(
 
         DashboardStatsRow(data = data)
         Spacer(Modifier.height(Spacing.x14))
-        DashboardRecentCard(bars = data.recentBars, onOpenSessionDetail = onOpenSessionDetail)
+        DashboardRecentCard(
+            bars = data.recentBars,
+            onOpenSessionDetail = onOpenSessionDetail,
+            onSeeAll = onOpenSpendingReport,
+        )
         Spacer(Modifier.height(Spacing.x14))
         DashboardTopSpendingCard(
             topItems = data.topItems,
             scope = state.scope,
             onSelectScope = viewModel::selectScope,
+            onSeeAll = onOpenSpendingRanking,
         )
 
-        if (data.trendableNames.isEmpty()) return@AppScaffold
+        if (state.trendNames.isEmpty()) return@AppScaffold
 
         Spacer(Modifier.height(Spacing.x14))
-        DashboardTrendCard(data = data, onSelectTrendItem = viewModel::selectTrendItem)
+        DashboardTrendCard(
+            trend = state.trend,
+            names = state.trendNames,
+            onSelectTrendItem = viewModel::selectTrendItem,
+            onSeeAll = { onOpenPriceTrend(state.trend.name) },
+        )
     }
 }

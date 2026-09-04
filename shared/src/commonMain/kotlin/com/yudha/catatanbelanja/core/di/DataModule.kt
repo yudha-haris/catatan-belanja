@@ -7,16 +7,19 @@ import com.yudha.catatanbelanja.core.data.database.SessionDao
 import com.yudha.catatanbelanja.core.data.database.SettingsDao
 import com.yudha.catatanbelanja.core.data.database.ShoppingListDao
 import com.yudha.catatanbelanja.core.data.database.StockDao
+import com.yudha.catatanbelanja.core.data.database.TrendDao
 import com.yudha.catatanbelanja.core.data.repository.BackupRepositoryImpl
 import com.yudha.catatanbelanja.core.data.repository.SessionRepositoryImpl
 import com.yudha.catatanbelanja.core.data.repository.SettingsRepositoryImpl
 import com.yudha.catatanbelanja.core.data.repository.ShoppingListRepositoryImpl
 import com.yudha.catatanbelanja.core.data.repository.StockRepositoryImpl
+import com.yudha.catatanbelanja.core.data.repository.TrendRepositoryImpl
 import com.yudha.catatanbelanja.core.domain.repository.BackupRepository
 import com.yudha.catatanbelanja.core.domain.repository.SessionRepository
 import com.yudha.catatanbelanja.core.domain.repository.SettingsRepository
 import com.yudha.catatanbelanja.core.domain.repository.ShoppingListRepository
 import com.yudha.catatanbelanja.core.domain.repository.StockRepository
+import com.yudha.catatanbelanja.core.domain.repository.TrendRepository
 import com.yudha.catatanbelanja.db.CatatanBelanjaDatabase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -35,6 +38,7 @@ val dataModule: Module = module {
     single { StockDao(get(), get(ioDispatcherQualifier)) }
     single { SettingsDao(get(), get(ioDispatcherQualifier)) }
     single { ShoppingListDao(get(), get(ioDispatcherQualifier)) }
+    single { TrendDao(get(), get(ioDispatcherQualifier)) }
 
     singleOf(::BackupCodec)
     singleOf(::DemoDataFactory)
@@ -43,5 +47,6 @@ val dataModule: Module = module {
     singleOf(::StockRepositoryImpl) bind StockRepository::class
     singleOf(::SettingsRepositoryImpl) bind SettingsRepository::class
     singleOf(::ShoppingListRepositoryImpl) bind ShoppingListRepository::class
+    singleOf(::TrendRepositoryImpl) bind TrendRepository::class
     singleOf(::BackupRepositoryImpl) bind BackupRepository::class
 }

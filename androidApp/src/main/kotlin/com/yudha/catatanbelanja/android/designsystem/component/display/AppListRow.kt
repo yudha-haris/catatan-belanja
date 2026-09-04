@@ -50,6 +50,7 @@ fun AppListRow(
     dense: Boolean = false,
     progress: Float? = null,
     progressIsLow: Boolean = false,
+    progressEstimate: Float? = null,
     onClick: (() -> Unit)? = null,
 ) {
     val colors = AppTheme.colors
@@ -129,7 +130,11 @@ fun AppListRow(
             )
             if (progress != null) {
                 Spacer(Modifier.height(Spacing.x6))
-                AppLevelBar(progress = progress, isLow = progressIsLow)
+                AppLevelBar(
+                    progress = progress,
+                    isLow = progressIsLow,
+                    estimate = progressEstimate,
+                )
             }
             if (subtitle != null) {
                 Spacer(Modifier.height(2.dp))

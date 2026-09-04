@@ -111,6 +111,7 @@ core/
     Strings.kt                  String.normalized(), String.capitalizeWords()
   catalog/
     CatalogData.kt              categories, units, defaultUnits, fallbackEmoji
+    UnitConversion.kt           unit families and factors — mass and volume convert, counts do not
   domain/
     model/
       ShoppingItem.kt
@@ -127,12 +128,16 @@ core/
       SessionSummary.kt
       ImportSummary.kt
       LastPurchase.kt
+      PriceBasis.kt              enum RAW, PER_UNIT
+      TrendSetting.kt
+      QtyOverride.kt
     repository/
       SessionRepository.kt
       StockRepository.kt
       ShoppingListRepository.kt
       SettingsRepository.kt
       BackupRepository.kt
+      TrendRepository.kt
     service/
       FileSharer.kt             interface (expect/actual-free; Android impl in androidMain)
       ClipboardWriter.kt        interface
@@ -148,6 +153,7 @@ core/
       StockDao.kt
       ShoppingListDao.kt
       SettingsDao.kt
+      TrendDao.kt
       Mappers.kt                row -> domain mapping helpers (internal)
     backup/
       BackupDto.kt              @Serializable DTOs (one file may hold the DTO family)
@@ -159,6 +165,7 @@ core/
       ShoppingListRepositoryImpl.kt
       SettingsRepositoryImpl.kt
       BackupRepositoryImpl.kt
+      TrendRepositoryImpl.kt
   di/
     CoreModule.kt               coreModule  — Clock, IdGenerator, IO dispatcher, shared use cases
     DataModule.kt               dataModule  — database, DAOs, repository bindings
@@ -185,7 +192,7 @@ features/
 
 ```
 CatatanBelanjaApp.kt            Application, starts Koin
-MainActivity.kt                 edge-to-edge, sets AppTheme + AppNavHost
+MainActivity.kt                 edge-to-edge (light system bars), AppTheme + AppNavHost
 designsystem/
   theme/
     AppTheme.kt                 AppTheme object + CompositionLocals + AppTheme composable
@@ -351,6 +358,30 @@ data class StockCheckLog(
     val entries: List<StockCheckEntry> = emptyList(),
 )
 
+/**
+ * One moment the app knew how much of a stock item was in the house — the only evidence behind an
+ * automatic drain rate. Written whenever a quantity moves; a save that only changes the reminder
+ * threshold writes none and leaves the item's `updatedAt` alone, so the estimate goes on counting
+ * from when the amount was last actually known.
+ */
+data class StockReading(
+    val itemId: String,
+    val qty: Double,
+    val unit: String,
+    val at: Long,
+    val source: ReadingSource,      // enum MANUAL | CHECK | PURCHASE
+)
+
+/** How fast one stock item is used up. No row for an item == these defaults. */
+data class StockRate(
+    val itemId: String,
+    val mode: RateMode = RateMode.AUTO,               // enum AUTO | MANUAL | OFF
+    val manualQty: Double? = null,                    // only meaningful under MANUAL
+    val manualUnit: String? = null,
+    val manualPeriod: RatePeriod = RatePeriod.WEEK,   // enum DAY(1) | WEEK(7) | MONTH(30), `days`
+    val updatedAt: Long = 0L,
+)
+
 data class ItemCategory(val name: String, val emoji: String, val items: List<String>)
 
 enum class ThemeFlavor { PURPLE, GREEN, BLUE }
@@ -371,6 +402,26 @@ data class LastPurchase(
     val note: String,
     val whenMillis: Long,
     val store: String,
+)
+
+enum class PriceBasis { RAW, PER_UNIT }
+
+/**
+ * How one item's price trend is measured. [nameKey] is `name.normalized()`; [baseUnit] only means
+ * anything for PER_UNIT and is null until the user picks one.
+ */
+data class TrendSetting(
+    val nameKey: String,
+    val basis: PriceBasis = PriceBasis.RAW,
+    val baseUnit: String? = null,
+)
+
+/** A quantity typed in after the trip. Read by the price trend and by nothing else. */
+data class QtyOverride(
+    val itemId: String,
+    val nameKey: String,
+    val qty: Double,
+    val unit: String,
 )
 
 data class ImportSummary(
@@ -417,12 +468,30 @@ Database class `CatatanBelanjaDatabase`, package `com.yudha.catatanbelanja.db`.
 Delete the placeholder `Smoke.sq` — it exists only to prove the build.
 
 Files: `Session.sq`, `SessionItem.sq`, `ShoppingList.sq`, `ShoppingListItem.sq`,
-`StockItem.sq`, `StockCheckLog.sq`, `StockCheckLogItem.sq`, `Settings.sq`.
+`StockItem.sq`, `StockCheckLog.sq`, `StockCheckLogItem.sq`, `StockReading.sq`, `StockRate.sq`,
+`Settings.sq`, `TrendSetting.sq`, `TrendQtyOverride.sq`.
 
-**Schema version 2.** Every schema change ships a `<n>.sqm` migration next to the `.sq` files —
+**Schema version 4.** Every schema change ships a `<n>.sqm` migration next to the `.sq` files —
 SQLDelight derives `Schema.version` from how many there are, runs the `.sq` files on a fresh
-install and the migrations on an existing one. `1.sqm` adds the two shopping-list tables, so an
-install that predates the feature upgrades instead of crashing on a missing table.
+install and the migrations on an existing one. `1.sqm` adds the two shopping-list tables, `2.sqm` the two
+price-trend tables and `3.sqm` the two smart-stock tables, so an install that predates any of them
+upgrades instead of crashing on a missing table.
+
+**A migration is analysed against the migrations before it, never against the `.sq` files.** There
+are no generated `.db` schema files in this project, so SQLDelight replays `1.sqm`, `2.sqm`, … from
+an empty database and checks each one against what its predecessors created. A `.sqm` therefore
+cannot name a table that only a `.sq` file declares — which rules out a foreign key from a new
+table to an existing one, because the key would compile on a fresh install and fail in the
+migration, leaving upgraded databases without a cascade that fresh ones enforce. New tables that
+hang off old ones carry **no** `REFERENCES` clause in either file (the two `CREATE TABLE` blocks
+stay byte-identical) and are cleaned up explicitly by the owning DAO instead, inside the same
+transaction that deletes the parent row.
+
+The same rule sends **backfills into Kotlin rather than into the migration**: a `.sqm` cannot read
+the old tables it would need. `StockRepositoryImpl.getReadings()` seeds any stock item that has no
+readings from that item's past month-end checks, lazily and once per item. Being Kotlin it matches
+names with `normalized()` the way the rest of the app does instead of approximating it in SQL, and
+it also catches items that arrive long after the upgrade — from a restored backup, or the demo data.
 
 ```sql
 -- Session.sq
@@ -481,6 +550,27 @@ CREATE TABLE stock_item (
     updated_at INTEGER NOT NULL
 );
 
+-- StockReading.sq -- no REFERENCES, per the rule above
+CREATE TABLE stock_reading (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id TEXT NOT NULL,
+    qty     REAL NOT NULL,
+    unit    TEXT NOT NULL,
+    at      INTEGER NOT NULL,
+    source  TEXT NOT NULL      -- 'MANUAL' | 'CHECK' | 'PURCHASE'
+);
+CREATE INDEX stock_reading_item_at ON stock_reading(item_id, at);
+
+-- StockRate.sq -- ditto
+CREATE TABLE stock_rate (
+    item_id       TEXT NOT NULL PRIMARY KEY,
+    mode          TEXT NOT NULL DEFAULT 'AUTO',   -- 'AUTO' | 'MANUAL' | 'OFF'
+    manual_qty    REAL,
+    manual_unit   TEXT,
+    manual_period TEXT,                           -- 'DAY' | 'WEEK' | 'MONTH'
+    updated_at    INTEGER NOT NULL
+);
+
 -- StockCheckLog.sq
 CREATE TABLE stock_check_log (
     id         TEXT NOT NULL PRIMARY KEY,
@@ -503,7 +593,33 @@ CREATE TABLE settings (
     key   TEXT NOT NULL PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- TrendSetting.sq — how one item's price trend is measured. Keyed by name.normalized(), so the
+-- setting survives the same item being written down with different capitalisation next trip.
+-- A name with no row here reads as the default, RAW.
+CREATE TABLE trend_setting (
+    name_key   TEXT NOT NULL PRIMARY KEY,
+    basis      TEXT NOT NULL DEFAULT 'RAW',   -- 'RAW' | 'PER_UNIT'
+    base_unit  TEXT,                          -- the unit a PER_UNIT price is quoted in
+    updated_at INTEGER NOT NULL
+);
+
+-- TrendQtyOverride.sq — a quantity typed in after the trip, for a purchase whose receipt recorded
+-- none. No REFERENCES session_item(id): see the migration note above. SessionDao deletes these
+-- rows itself, in the same transactions that drop the items.
+CREATE TABLE trend_qty_override (
+    item_id  TEXT NOT NULL PRIMARY KEY,
+    name_key TEXT NOT NULL,
+    qty      REAL NOT NULL,
+    unit     TEXT NOT NULL
+);
+CREATE INDEX trend_qty_override_name_key ON trend_qty_override(name_key);
 ```
+
+`SessionDao` stands in for the missing cascade: `deleteSession`, `deleteAllSessions`, `deleteItem`
+and `updateItem` all drop the matching `trend_qty_override` rows inside their own transaction.
+`updateItem` is included deliberately — an edited receipt makes the correction a stale second
+opinion, and one the user cannot see from the edit sheet.
 
 Each `.sq` also declares its named queries (`selectAll`, `selectById`, `insert`, `update`,
 `deleteById`, …). Only `.sq` files contain SQL; no raw SQL strings anywhere in Kotlin.
@@ -557,6 +673,12 @@ interface StockRepository {
     /** Upserts the log for the current month and updates every stock item's qty. */
     suspend fun saveStockCheck(entries: List<StockCheckEntry>): Resource<Unit>
     suspend fun deleteCheckLog(id: String): Resource<Unit>
+
+    /** Readings per stock item id, oldest first. Backfills any item that has none — see §5. */
+    suspend fun getReadings(): Resource<Map<String, List<StockReading>>>
+    /** Saved rates by item id; an item with no entry is on the `StockRate` defaults. */
+    suspend fun getRates(): Resource<Map<String, StockRate>>
+    suspend fun saveRate(rate: StockRate): Resource<Unit>
 }
 
 interface SettingsRepository {
@@ -569,6 +691,19 @@ interface SettingsRepository {
      */
     fun observeSettings(): Flow<AppSettings>
     suspend fun saveThemeFlavor(flavor: ThemeFlavor): Resource<Unit>
+}
+
+/**
+ * The manual corrections behind the price trend. Everything is keyed by `name.normalized()`.
+ * [getSetting] never returns null: a name with nothing saved reads back as the default.
+ */
+interface TrendRepository {
+    suspend fun getSetting(nameKey: String): Resource<TrendSetting>
+    suspend fun saveSetting(setting: TrendSetting): Resource<Unit>
+    suspend fun getOverrides(nameKey: String): Resource<List<QtyOverride>>
+    suspend fun saveOverride(override: QtyOverride): Resource<Unit>
+    suspend fun deleteOverride(itemId: String): Resource<Unit>
+    suspend fun clearAll(): Resource<Unit>
 }
 
 interface BackupRepository {
@@ -662,6 +797,10 @@ fun AppTheme(flavor: ThemeFlavor, content: @Composable () -> Unit)
 `AppTheme` also installs a Material 3 `MaterialTheme` derived from the flavour so Material
 components (sheets, ripples) inherit the right colours.
 
+**System bars are `MainActivity`'s job.** The app is light-theme only, so `enableEdgeToEdge` is
+given `SystemBarStyle.light(...)` for both bars. Left on its default it reads the *system* dark
+mode instead, painting white icons onto the app's white background.
+
 **Keyboard insets are `AppScaffold`'s job.** `MainActivity` calls `enableEdgeToEdge()`, which sets
 `decorFitsSystemWindows = false` and makes the manifest's `android:windowSoftInputMode`
 inert — the window never resizes. Without `imePadding()` on the scaffold's content the scroll
@@ -709,7 +848,9 @@ a `FontFamily`; fall back to `FontFamily.SansSerif` only if a weight is missing)
 Shapes / spacing (`AppShapes`): `radius = 22.dp`, `radiusSmall = 14.dp`, `radiusItem = 18.dp`,
 `radiusSheet = 28.dp`, `pill = 999.dp`. Card shadow: ambient `ink @ 18%`, blur 30, y-offset 10
 (use `Modifier.shadow(elevation = 10.dp, shape, ambientColor, spotColor)` tuned to match).
-Screen padding `PaddingValues(start = 16, top = 18, end = 16, bottom = 150)`.
+Screen padding `PaddingValues(start = 16, top = 18, end = 16, bottom = 150)`; `listPadding` is
+the same without the top gap (a list under a pinned header) and `headerPadding` is the header's
+own `start = 16, top = 18, end = 16`.
 Max content width 440.dp, centred. Icon badge 40×40, radius 14, `tint` background, 20sp emoji.
 
 ### Components
@@ -718,6 +859,10 @@ Signatures are binding for the names and the first parameters; add optional para
 
 ```kotlin
 AppScaffold(header, bottomBar, backgroundColor, contentPadding, content)
+    // header sits OUTSIDE the scrolling area — the back pill and the screen's actions stay
+    // reachable however far the content has scrolled. It carries shapes.headerPadding, and
+    // contentPadding's top gap is dropped whenever a header is present or the two stack.
+    // Every screen passes its header here; none renders AppScreenHeader as a list item.
     // bottomBar is lifted by LocalShellBottomInset so it clears the shell's floating
     // tab bar; the inset is zero on pushed routes, which have no tab bar under them.
     // The content area carries imePadding(); bottomBar does not, so a pinned action bar
@@ -754,12 +899,21 @@ ReceiptHeader(label, amount, footerLeft, footerRight, compact = false)
 AppListRow(title, subtitle, trailing, trailingSub, trailingSubTone, emoji | leading,
            selected = false, dense = false, progress = null, onClick)
 AppBadge(text, tone)          enum class AppBadgeTone { Tint, Up, Down, Neutral }
-AppStatCard(label, value, hint, hintTone)
-AppLevelBar(progress, isLow)
+AppStatCard(label, value, hint, hintTone, onClick = null)
+    // onClick is optional: a stat that stands for a single thing (the biggest trip of the window)
+    // opens it; a stat that is only a number stays inert rather than pretending to be a button.
+AppLevelBar(progress, isLow, estimate = null)
+    // `estimate` splits the one bar into two tones instead of adding a second: solid up to what
+    // the app reckons is still there, faded from there to what was last written down. The faded
+    // stretch is what it believes is already used — a shadow of the fill, not a rival to it.
 AppEmptyState(emoji, title, message, action)
 AppBarChart(bars, onBarClick)     data class AppBarChartBar(label, valueLabel, ratio, highlighted)
 AppRankRow(rank, emoji, title, valueLabel, ratio, hint)
 AppLineChart(points)              data class AppLineChartPoint(valueLabel, dateLabel, ratio)
+AppDonutChart(slices, centerValue, centerLabel)   data class AppDonutSlice(fraction, color)
+    // The share ring. The caller owns the colours, because the ramp is a screen decision: the
+    // ranking page steps one hue down in opacity rather than using six hues, which would read as
+    // six categories that mean something when the arcs only run biggest to smallest.
 AppRollingText(text, style, color)
     // A figure that rolls instead of cutting. Always upward — a shopping total only really
     // goes one way, and a direction guessed from the value would flip on the rare correction
@@ -826,8 +980,15 @@ sealed interface AppDestination {
     data class Compare(val aId: String, val bId: String)  // "compare/{aId}/{bId}"
     data object ShoppingList : AppDestination              // "list"
     data object Settings : AppDestination                 // "settings"
+    data object SpendingReport : AppDestination           // "report/spending"
+    data object SpendingRanking : AppDestination          // "report/ranking"
+    data class PriceTrend(val name: String?)              // "report/trend?trendName={trendName}"
 }
 ```
+
+`PriceTrend` is the only route carrying user data rather than a generated id, so its argument is
+`Uri.encode`d — not `URLEncoder`, which spells a space `+`; navigation decodes with `Uri.decode`
+and would hand the screen a name with a literal plus in it.
 
 `MainShellScreen` measures `ShellTabBar` and publishes its height through
 `LocalShellBottomInset` (`designsystem/component/layout/`), so any tab screen's `AppScaffold`
@@ -837,8 +998,8 @@ survives font scaling and taller navigation bars.
 `AppNavHost` uses `androidx.navigation.compose` with those routes. `MainShellScreen` owns the
 four tabs (Belanja / Riwayat / Stok / Ringkasan) — a `Scaffold` with the floating pill
 `ShellTabBar` and the four tab composables kept alive via saved state; the tab index is
-`rememberSaveable`. `LiveSession`, `SessionDetail`, `Compare`, `ShoppingList` and `Settings` are pushed
-routes with no tab bar.
+`rememberSaveable`. `LiveSession`, `SessionDetail`, `Compare`, `ShoppingList`, `Settings`,
+`SpendingReport`, `SpendingRanking` and `PriceTrend` are pushed routes with no tab bar.
 
 ---
 
@@ -991,14 +1152,150 @@ log detail.
 `CalculateStockUsage` use case: per entry, `bought` = that month's purchases of the same name
 and unit, `remaining` = the logged qty, `used ≈ max(0, previousRemaining + bought − remaining)`.
 
+#### Smart stock — the estimate
+
+The stored quantity answers "what did somebody last write down". Smart stock answers "what is
+probably there now", and the two are kept apart everywhere: the estimate is a **shadow**, drawn
+beside the stored number, and it never becomes the stored number without a deliberate tap.
+
+**Where the rate comes from.** Two ways, exactly as the feature was asked for:
+1. *Automatic*, the default nobody has to choose. Every quantity that moves writes a
+   `StockReading`; `EstimateStockRate` reads consecutive pairs of them as consumption windows.
+   Pairs where the quantity rose are restocks and are skipped — they only mark where the next
+   window starts. Windows are pooled (`total used / total days`) rather than averaged one by one,
+   so a six-week observation outweighs a one-week one, and only the newest 8 count so a changed
+   habit surfaces within weeks. A pair in a different unit still counts when the two convert
+   (`UnitConversion`) — 1 kg and 50 gram belong on one line, 1 botol and 1 liter do not.
+2. *Manual*, via `StockRate.mode = MANUAL`. Quoted in the user's own framing ("1 kg per bulan"),
+   because that is how people describe a household. A stated rate always beats the inferred one.
+
+`EstimateCurrentStock` projects forward from `item.updatedAt` at whichever rate applies and returns
+null wherever silence is the honest answer: mode `OFF`, an already-empty shelf, no rate, less than
+a day elapsed, or under 5% of the shelf used — below which the estimate would only repeat the
+number already on screen.
+
+**Rules the UI is built to, in order of priority:**
+1. **Nothing appears until there is something to say.** An item with no estimate renders exactly
+   as it did before the feature existed.
+2. **Sections and warnings are decided by the stored quantity, never by the estimate.** A guess may
+   whisper `Alert.MAYBE_LOW` (grey, not coral); it may not move a row into "Perlu dibeli", because
+   sending someone to the shop on a guess is how a guess stops being welcome.
+3. **One tap, in a sheet the user already opened.** The row gains no button. `StockSmartCard` sits
+   in the editor directly above the quantity field, and "Pakai" only *types* the estimate into that
+   field — Simpan is still the user's own tap.
+4. **All the configuration lives behind one quiet line.** `StockRateRow` is the only thing added to
+   the editor; the three modes and the manual fields live in `StockRateSheet`, which the user has
+   to ask for. A brand-new item shows no rate row at all: no history to learn from, no id to hang a
+   rate on, and the add sheet stays as short as it has always been.
+5. **The month-end check is never pre-filled with an estimate.** It is shown on the line as
+   information, and that is all. This sheet is where the app finds out what is *actually* on the
+   shelf; a line arriving with a guess in it gets confirmed rather than counted, and the estimator
+   would then be learning from its own output.
+6. **The estimate marks its own homework.** When the user saves a quantity that a prediction was
+   standing next to, `ScoreStockEstimate` scores the prediction; within 15% it fires
+   `StockEffect.EstimateHit` instead of `ItemSaved`, and the screen celebrates with the accuracy.
+   Paired with `StockConfidenceDots` — which visibly fill in as windows accumulate — this is the
+   only place the feature is allowed to claim it was right, and only ever against a number the
+   user typed themselves.
+
+Use cases: `EstimateStockRate` (readings → `StockRateEstimate`), `EstimateCurrentStock`
+(item + rate → `StockShadow`), `CreateStockRate` (sheet fields → `StockRate`),
+`ScoreStockEstimate` (prediction vs. what the user typed → accuracy % or null). The first three
+are pure and covered by `shared/src/commonTest/.../features/stock/domain/usecase/`.
+A fourth sheet joins the three above: the drain-rate sheet, opened from the editor.
+
 ### 11.4 `features/dashboard`
 
 `DashboardViewModel` + `BuildDashboardData` use case →
-`DashboardData(monthTotal, previousMonthTotal, monthDeltaPercent, monthSessionCount,
+`DashboardData(monthKey, monthTotal, previousMonthTotal, monthDeltaPercent, monthSessionCount,
 monthAverage, recentBars (last 8, oldest first), topItems (top 5: name, total, count, ratio,
-sharePercent), trendableNames (bought ≥ 2×), trendPoints)`.
-Scope toggle `MONTH` / `ALL` affects `topItems` only. The trend chart plots the selected item's
-price across finished sessions, oldest → newest, rendered only with ≥ 2 points.
+sharePercent))`.
+Scope toggle `MONTH` / `ALL` affects `topItems` only.
+
+**The trend card is not part of `DashboardData`.** `DashboardState` carries `trendCandidates` /
+`trendNames` from `BuildTrendCandidates` and a `PriceTrendData` from `BuildPriceTrend` — the same
+use case the trend page uses — because a trend depends on the item's saved `PriceBasis` and its
+manual quantity corrections, which are read from the database rather than derived from the
+sessions. A second, simpler copy of the maths living in `BuildDashboardData` is exactly how the
+card and the page it links to would end up disagreeing about what an item's price did.
+`drawTrend` swallows a repository failure on purpose: the summary tab is not the place to raise a
+dialog about a chart, and an unadjusted line beats an error where a card used to be.
+
+Each of the three cards ends in a `DashboardSeeAllRow` — one quiet, right-aligned chip that opens
+the page behind it. The tab stays a summary; these three are where the summary is allowed to run
+out of room.
+
+**Shared derivation helpers** live in `domain/usecase/SessionMetrics.kt` as `internal` top-level
+functions: `endedMillis()`, `total()`, `monthKeysIn`, `previousMonthKey`, `inRange`, `ratioOf`,
+`percentOf`, `percentChange`, `averageOf`. Every derivation in this feature uses them, so the tab
+and the three pages cannot drift into two different ideas of what "rata-rata" means. `inRange` is
+calendar-aligned: "3 bulan" is three month columns, not ninety days.
+
+**`ReportRange`** (`MONTH` / `THREE_MONTHS` / `SIX_MONTHS` / `ALL`) is shared by both report
+pages. Each page publishes the windows it offers as `rangeOptions` in its state, so the chip row is
+data rather than a list hardcoded in a composable.
+
+#### Spending report (pushed, from the "8 belanja terakhir" card)
+
+`SpendingReportViewModel` + `BuildSpendingReport` → `SpendingReportData(range, total, tripCount,
+tripAverage, monthCount, monthAverage, highestTotal, highestSessionId, hasHighest, months,
+monthBars, trips, hasAnyTrip)`.
+`months` and `trips` run newest first; `monthBars` is the chart's own slice — the last 6 months,
+oldest first, **re-scaled against each other** rather than against the whole window, because one
+huge older month would flatten every bar in a six-bar chart. `MonthSpending` compares against the
+previous month *in the same series*, so a gap month reads as no comparison rather than a 100% drop.
+`TripSpending` carries `hasName` / `hasStore` so the row composable picks a string resource instead
+of running a `name.ifBlank { store }` ladder of its own.
+Actions: `load()`, `selectRange(range)`. Range chips re-derive; they never re-query.
+
+#### Spending ranking (pushed, from the "Pengeluaran terbesar" card)
+
+`SpendingRankingViewModel` + `BuildSpendingRanking` → `SpendingRankingData(range, mode, total,
+entryCount, tripCount, entries, slices, leaderLabel, leaderPercent, hasEntries)`.
+`RankingMode.ITEM` ranks individual items; `RankingMode.CATEGORY` rolls them up through
+`FindItemCategory`. Anything the catalog does not know lands in one catch-all row flagged
+`isOther` with a **blank label** — "lain-lain" is copy, so the composable resolves it. Dropping
+those items instead would make every percentage on the page a lie.
+`slices` is the donut: the five biggest plus one tail arc, with `fraction` taken off the totals
+rather than off the rounded percentages, so the ring always closes exactly. An item bought twice or
+more sets `canOpenTrend`, and tapping the row opens its price trend.
+Actions: `load()`, `selectRange(range)`, `selectMode(mode)`.
+
+#### Price trend (pushed, from the "Tren harga" card or a ranking row)
+
+`PriceTrendViewModel` + `BuildTrendCandidates` + `BuildPriceTrend` → `PriceTrendData(name, emoji,
+basis, baseUnit, baseUnitOptions, canUsePerUnit, points, purchases, hasTrend, usableCount,
+skippedCount, firstValue, lastValue, deltaPercent, isUp, isDown, cheapest, dearest, average)`.
+
+**The chart is dumb by default, per item, and that is the design.** `PriceBasis.RAW` plots what the
+item cost each trip — the number the user recognises, and the right one while the same amount is
+bought each time. It is also wrong the moment the amount changes: 0,5 kg one month against 2 kg the
+next reads as a 300% rise. `PriceBasis.PER_UNIT` divides by the quantity and is **opt-in per item**,
+saved to `trend_setting` the instant the chip is tapped, because it needs a quantity on every
+purchase and the receipt does not always carry one.
+
+A purchase the current basis cannot measure — no quantity anywhere, or one in a unit
+`UnitConversion` will not convert — is `isUsable = false`. It stays in `purchases` and is left out
+of `points`: it is exactly what this page exists to let the user fix, so it must not silently
+distort the line, and must not silently vanish from it either. Deltas are drawn against the
+previous *usable* purchase, never across a skipped one.
+
+`TrendQtySheet` is the manual half. It writes a `QtyOverride` keyed by `session_item.id` and
+**never rewrites the receipt** — the trip keeps exactly what was logged in the shop, and the sheet
+says so. `TrendPurchase` carries both `recordedQty`/`recordedUnit` and `effectiveQty`/
+`effectiveUnit` so the difference stays visible.
+
+Actions: `load(initialName)`, `openPicker()`, `dismissPicker()`, `onQueryChanged(query)`,
+`selectName(name)`, `selectBasis(basis)`, `selectBaseUnit(unit)`, `openQtySheet(itemId)`,
+`dismissQtySheet()`, `saveQtyOverride(qtyText, unit)`, `clearQtyOverride()`.
+Effects: `ShowMessage(INVALID_QTY | ADJUSTMENT_SAVED | ADJUSTMENT_CLEARED)`. Errors go through
+`loadState` / `actionState`; this screen shows the error dialog but **no loading dialog** — every
+action on it is a toggle or a two-field sheet over a local database, and a spinner that flashes for
+one frame reads as a glitch.
+
+`BuildPriceTrend` is covered by `shared/src/commonTest/.../BuildPriceTrendTest.kt`, which pins the
+0,5 kg / 2 kg / 900 g case in both bases, the gram→kg conversion, the skip, the override, and the
+promise that the receipt is left alone.
 
 ### 11.5 `features/settings`
 

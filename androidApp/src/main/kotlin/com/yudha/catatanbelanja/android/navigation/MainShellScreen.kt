@@ -43,6 +43,9 @@ fun MainShellScreen(
     onOpenLiveSession: () -> Unit,
     onOpenSessionDetail: (String) -> Unit,
     onOpenCompare: (String, String) -> Unit,
+    onOpenSpendingReport: () -> Unit,
+    onOpenSpendingRanking: () -> Unit,
+    onOpenPriceTrend: (String?) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenList: () -> Unit,
     modifier: Modifier = Modifier,
@@ -105,6 +108,9 @@ fun MainShellScreen(
 
             DashboardScreen(
                 onOpenSessionDetail = onOpenSessionDetail,
+                onOpenSpendingReport = onOpenSpendingReport,
+                onOpenSpendingRanking = onOpenSpendingRanking,
+                onOpenPriceTrend = onOpenPriceTrend,
                 onOpenSettings = onOpenSettings,
                 modifier = Modifier.shownWhen(selectedTab == TAB_DASHBOARD),
                 viewModel = dashboardViewModel,

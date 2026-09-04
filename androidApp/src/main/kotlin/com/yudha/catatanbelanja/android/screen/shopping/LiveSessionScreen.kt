@@ -213,30 +213,29 @@ fun LiveSessionScreen(
                 onFinish = viewModel::openFinishSheet,
             )
         },
+        header = {
+            AppScreenHeader(
+                title = storeName,
+                subtitle = stringResource(
+                    R.string.live_header_subtitle,
+                    session.startedAt.toTimeLabel(),
+                ),
+                onBack = viewModel::leaveSession,
+                actions = {
+                    AppIconButton(
+                        onClick = { showStoreSheet = true },
+                        contentDescription = stringResource(R.string.common_cd_edit_store),
+                        emoji = "✎",
+                    )
+                },
+            )
+        },
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = AppTheme.shapes.screenPadding,
+            contentPadding = AppTheme.shapes.listPadding,
             verticalArrangement = Arrangement.spacedBy(Spacing.x8),
         ) {
-            item(key = "header") {
-                AppScreenHeader(
-                    title = storeName,
-                    subtitle = stringResource(
-                        R.string.live_header_subtitle,
-                        session.startedAt.toTimeLabel(),
-                    ),
-                    onBack = viewModel::leaveSession,
-                    actions = {
-                        AppIconButton(
-                            onClick = { showStoreSheet = true },
-                            contentDescription = stringResource(R.string.common_cd_edit_store),
-                            emoji = "✎",
-                        )
-                    },
-                )
-            }
-
             item(key = "receipt") {
                 ReceiptHeader(
                     label = stringResource(R.string.live_receipt_label),

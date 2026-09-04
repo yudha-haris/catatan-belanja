@@ -1,0 +1,18 @@
+-- v2 -> v3: the price-trend adjustments. The trend is "dumb" by default — it plots what each
+-- trip cost — and these two tables hold everything the user changes about that, per item.
+-- Fresh installs get them from TrendSetting.sq / TrendQtyOverride.sq.
+CREATE TABLE trend_setting (
+    name_key   TEXT NOT NULL PRIMARY KEY,
+    basis      TEXT NOT NULL DEFAULT 'RAW',
+    base_unit  TEXT,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE trend_qty_override (
+    item_id  TEXT NOT NULL PRIMARY KEY,
+    name_key TEXT NOT NULL,
+    qty      REAL NOT NULL,
+    unit     TEXT NOT NULL
+);
+
+CREATE INDEX trend_qty_override_name_key ON trend_qty_override(name_key);

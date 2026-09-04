@@ -1,7 +1,9 @@
 package com.yudha.catatanbelanja.android
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -21,7 +23,13 @@ import org.koin.androidx.compose.koinViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // The app is light-theme only, so the bars must be too: `enableEdgeToEdge()` on its own
+        // picks the icon colour from the *system* dark mode, which paints white icons onto our
+        // white background and hides the clock and the battery entirely.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+        )
         setContent {
             val viewModel: AppViewModel = koinViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()

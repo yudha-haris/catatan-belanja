@@ -15,6 +15,8 @@ import com.yudha.catatanbelanja.R
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.ConfirmationBottomSheet
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.LocalAppUi
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScaffold
+import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScreenHeader
+import com.yudha.catatanbelanja.android.format.toLongDateLabel
 import com.yudha.catatanbelanja.android.screen.history.components.SessionDetailCompareSheet
 import com.yudha.catatanbelanja.android.screen.history.components.SessionDetailContent
 import com.yudha.catatanbelanja.android.screen.history.components.SessionDetailItemSheet
@@ -82,17 +84,37 @@ fun SessionDetailScreen(
     }
 
     val summary = state.summary
+    // Nothing to title the screen with until the read lands, so the back pill arrives with it.
+    val header: (@Composable () -> Unit)? = summary?.let { loaded ->
+        {
+            val session = loaded.session
+            val dateLabel = (session.endedAt ?: session.startedAt).toLongDateLabel()
+            AppScreenHeader(
+                title = session.name,
+                subtitle = when (session.store.isBlank()) {
+                    true -> dateLabel
+                    false -> stringResource(
+                        R.string.detail_subtitle_with_store,
+                        dateLabel,
+                        session.store,
+                    )
+                },
+                onBack = onBack,
+            )
+        }
+    }
+
     AppScaffold(
         modifier = modifier,
         scrollable = false,
         contentPadding = PaddingValues(),
+        header = header,
     ) {
         if (summary == null) return@AppScaffold
 
         SessionDetailContent(
             summary = summary,
             state = state,
-            onBack = onBack,
             onOpenComparePicker = { showComparePicker = true },
             onRepeatSession = viewModel::repeatSession,
             onItemClicked = { row -> editingRow = row },
