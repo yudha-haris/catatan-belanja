@@ -1,0 +1,158 @@
+package com.yudha.catatanbelanja.core.catalog
+
+import com.yudha.catatanbelanja.core.domain.model.ItemCategory
+
+/** The prototype's CATS / UNITS / UNIT_DEFAULT tables, verbatim. Data, not UI copy. */
+object CatalogData {
+    val categories: List<ItemCategory> = listOf(
+        ItemCategory(
+            name = "Sembako",
+            emoji = "🍚",
+            items = listOf(
+                "Beras",
+                "Minyak Goreng",
+                "Gula Pasir",
+                "Garam",
+                "Tepung Terigu",
+                "Telur",
+                "Mie Instan",
+                "Kecap Manis",
+                "Saus Sambal",
+                "Santan",
+                "Kopi",
+                "Teh",
+                "Bumbu Dapur",
+            ),
+        ),
+        ItemCategory(
+            name = "Sayur & Buah",
+            emoji = "🥬",
+            items = listOf(
+                "Bawang Merah",
+                "Bawang Putih",
+                "Cabai",
+                "Tomat",
+                "Wortel",
+                "Kentang",
+                "Bayam",
+                "Kangkung",
+                "Sawi",
+                "Pisang",
+                "Jeruk",
+                "Apel",
+                "Semangka",
+                "Pepaya",
+            ),
+        ),
+        ItemCategory(
+            name = "Lauk",
+            emoji = "🍗",
+            items = listOf(
+                "Ayam",
+                "Daging Sapi",
+                "Ikan",
+                "Tahu",
+                "Tempe",
+                "Udang",
+                "Sosis",
+                "Nugget",
+                "Bakso",
+            ),
+        ),
+        ItemCategory(
+            name = "Susu & Roti",
+            emoji = "🥛",
+            items = listOf(
+                "Susu UHT",
+                "Susu Bubuk",
+                "Roti Tawar",
+                "Keju",
+                "Yogurt",
+                "Mentega",
+                "Sereal",
+            ),
+        ),
+        ItemCategory(
+            name = "Rumah Tangga",
+            emoji = "🧴",
+            items = listOf(
+                "Sabun Mandi",
+                "Sampo",
+                "Pasta Gigi",
+                "Deterjen",
+                "Pewangi Pakaian",
+                "Sabun Cuci Piring",
+                "Tisu",
+                "Pembalut",
+                "Popok",
+                "Gas LPG",
+                "Air Galon",
+                "Kantong Sampah",
+            ),
+        ),
+        ItemCategory(
+            name = "Camilan",
+            emoji = "🍪",
+            items = listOf(
+                "Biskuit",
+                "Keripik",
+                "Cokelat",
+                "Permen",
+                "Air Mineral",
+                "Sirup",
+                "Minuman Kaleng",
+            ),
+        ),
+    )
+
+    val units: List<String> = listOf(
+        "pcs",
+        "kg",
+        "gram",
+        "liter",
+        "ml",
+        "bungkus",
+        "ikat",
+        "sisir",
+        "buah",
+        "botol",
+        "kotak",
+        "galon",
+        "tabung",
+    )
+
+    /** Keys are already `normalized()` item names. */
+    val defaultUnits: Map<String, String> = mapOf(
+        "beras" to "kg",
+        "minyak goreng" to "liter",
+        "gula pasir" to "kg",
+        "telur" to "kg",
+        "tepung terigu" to "kg",
+        "susu uht" to "liter",
+        "air galon" to "galon",
+        "gas lpg" to "tabung",
+        "ayam" to "kg",
+        "daging sapi" to "kg",
+        "ikan" to "kg",
+        "udang" to "kg",
+        "bawang merah" to "kg",
+        "bawang putih" to "kg",
+        "cabai" to "kg",
+        "tomat" to "kg",
+        "wortel" to "kg",
+        "kentang" to "kg",
+        "bayam" to "ikat",
+        "kangkung" to "ikat",
+        "sawi" to "ikat",
+        "pisang" to "sisir",
+        "jeruk" to "kg",
+        "apel" to "kg",
+        "semangka" to "buah",
+        "pepaya" to "buah",
+        "mie instan" to "bungkus",
+        "roti tawar" to "bungkus",
+        "bakso" to "bungkus",
+    )
+
+    const val FALLBACK_EMOJI = "🛍️"
+}
