@@ -5,6 +5,9 @@
          be read back as line items. Everything else — the database, the backup file, the receipt
          card it shares — stays on the device. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Read-only, no runtime grant. So the scanner can say "you are offline" straight away
+         instead of letting the user photograph a receipt and wait out a 90-second timeout. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".android.CatatanBelanjaApp"

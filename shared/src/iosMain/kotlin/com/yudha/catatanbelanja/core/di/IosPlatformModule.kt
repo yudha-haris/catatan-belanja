@@ -4,9 +4,11 @@ import com.yudha.catatanbelanja.core.data.database.DatabaseDriverFactory
 import com.yudha.catatanbelanja.core.data.service.IosClipboardWriter
 import com.yudha.catatanbelanja.core.data.service.IosFileSharer
 import com.yudha.catatanbelanja.core.data.service.IosImageStore
+import com.yudha.catatanbelanja.core.data.service.IosNetworkMonitor
 import com.yudha.catatanbelanja.core.domain.service.ClipboardWriter
 import com.yudha.catatanbelanja.core.domain.service.FileSharer
 import com.yudha.catatanbelanja.core.domain.service.ImageStore
+import com.yudha.catatanbelanja.core.domain.service.NetworkMonitor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
@@ -20,4 +22,5 @@ fun iosPlatformModule(): Module = module {
     single<FileSharer> { IosFileSharer() }
     single<ClipboardWriter> { IosClipboardWriter() }
     single<ImageStore> { IosImageStore() }
+    single<NetworkMonitor> { IosNetworkMonitor() }
 }

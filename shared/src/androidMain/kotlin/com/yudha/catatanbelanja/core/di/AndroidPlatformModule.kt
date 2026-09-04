@@ -5,9 +5,11 @@ import com.yudha.catatanbelanja.core.data.database.DatabaseDriverFactory
 import com.yudha.catatanbelanja.core.data.service.AndroidClipboardWriter
 import com.yudha.catatanbelanja.core.data.service.AndroidFileSharer
 import com.yudha.catatanbelanja.core.data.service.AndroidImageStore
+import com.yudha.catatanbelanja.core.data.service.AndroidNetworkMonitor
 import com.yudha.catatanbelanja.core.domain.service.ClipboardWriter
 import com.yudha.catatanbelanja.core.domain.service.FileSharer
 import com.yudha.catatanbelanja.core.domain.service.ImageStore
+import com.yudha.catatanbelanja.core.domain.service.NetworkMonitor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
@@ -21,4 +23,5 @@ fun androidPlatformModule(context: Context): Module = module {
     single<FileSharer> { AndroidFileSharer(context) }
     single<ClipboardWriter> { AndroidClipboardWriter(context) }
     single<ImageStore> { AndroidImageStore(context) }
+    single<NetworkMonitor> { AndroidNetworkMonitor(context) }
 }
