@@ -1,0 +1,20 @@
+package com.yudha.catatanbelanja.core.di
+
+import com.yudha.catatanbelanja.core.data.database.DatabaseDriverFactory
+import com.yudha.catatanbelanja.core.data.service.IosClipboardWriter
+import com.yudha.catatanbelanja.core.data.service.IosFileSharer
+import com.yudha.catatanbelanja.core.domain.service.ClipboardWriter
+import com.yudha.catatanbelanja.core.domain.service.FileSharer
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import org.koin.core.module.Module
+import org.koin.dsl.module
+
+/** iOS side of the graph. Native has no separate IO pool, so the default pool backs the DAOs. */
+fun iosPlatformModule(): Module = module {
+    single<CoroutineDispatcher>(ioDispatcherQualifier) { Dispatchers.Default }
+
+    single { DatabaseDriverFactory() }
+    single<FileSharer> { IosFileSharer() }
+    single<ClipboardWriter> { IosClipboardWriter() }
+}
