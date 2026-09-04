@@ -24,6 +24,7 @@ import com.yudha.catatanbelanja.android.screen.preset.PresetCategoriesScreen
 import com.yudha.catatanbelanja.android.screen.preset.PresetHubScreen
 import com.yudha.catatanbelanja.android.screen.preset.PresetItemsScreen
 import com.yudha.catatanbelanja.android.screen.preset.PresetLanguageScreen
+import com.yudha.catatanbelanja.android.screen.receipt.ScanReceiptScreen
 import com.yudha.catatanbelanja.android.screen.settings.SettingsScreen
 import com.yudha.catatanbelanja.android.screen.shopping.LiveSessionScreen
 
@@ -83,6 +84,9 @@ fun AppNavHost(
                 },
                 onOpenList = {
                     navController.navigate(AppDestination.ShoppingList.route)
+                },
+                onOpenScanReceipt = {
+                    navController.navigate(AppDestination.ScanReceipt.route)
                 },
             )
         }
@@ -178,6 +182,18 @@ fun AppNavHost(
 
         composable(AppDestination.Pattern.SHOPPING_LIST) {
             ShoppingListScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppDestination.Pattern.SCAN_RECEIPT) {
+            ScanReceiptScreen(
+                onBack = { navController.popBackStack() },
+                // The scan screen must not stay behind the trip it just created: backing out of
+                // that receipt belongs on the history tab, not on a spent draft.
+                onOpenSessionDetail = { sessionId ->
+                    navController.popBackStack()
+                    navController.navigate(AppDestination.SessionDetail(sessionId).route)
+                },
+            )
         }
 
         composable(AppDestination.Pattern.SETTINGS) {

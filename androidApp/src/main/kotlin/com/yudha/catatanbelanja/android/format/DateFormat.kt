@@ -15,6 +15,8 @@ private const val DAY_PATTERN = "EEE, d MMM"
 private const val LONG_DATE_PATTERN = "EEEE, d MMMM yyyy"
 private const val TIME_PATTERN = "HH.mm"
 private const val SHORT_DATE_PATTERN = "d MMM"
+// The one editable date in the app. Numeric, because it is typed back in.
+private const val INPUT_DATE_PATTERN = "d/M/yyyy"
 private const val MONTH_PATTERN = "MMMM yyyy"
 private const val SHORT_MONTH_PATTERN = "MMM"
 
@@ -46,6 +48,12 @@ fun Long.toTimeLabel(): String = patternOf(TIME_PATTERN).format(this.atSystemZon
 
 /** "4 Sep" */
 fun Long.toShortDateLabel(): String = patternOf(SHORT_DATE_PATTERN).format(this.atSystemZone())
+
+/**
+ * "4/9/2026" — the shape the scan review screen seeds its date field with, and the one
+ * `ScanReceiptViewModel.save` parses back. Day first, as every Indonesian receipt prints it.
+ */
+fun Long.toInputDateLabel(): String = patternOf(INPUT_DATE_PATTERN).format(this.atSystemZone())
 
 /** "2026-09" -> "September 2026". An unparseable key is returned untouched. */
 fun String.monthKeyToLabel(): String {

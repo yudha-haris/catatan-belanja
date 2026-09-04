@@ -712,4 +712,39 @@
     <string name="preset_language_toast_applied">Bahasa diterapkan</string>
     <string name="preset_language_note_title">Yang tidak ikut berubah</string>
     <string name="preset_language_note_message">Nama barang, kategori dan merk adalah datamu sendiri, jadi tidak pernah diterjemahkan. Harga tetap dalam rupiah.</string>
+
+    <!-- ============ scan: membaca struk lama ============ -->
+    <string name="scan_title">Scan struk</string>
+    <string name="scan_subtitle">Catat belanja lama dari struknya</string>
+    <string name="history_scan_cta">Scan</string>
+    <string name="scan_intro_title">Scan struk lama</string>
+    <string name="scan_intro_message">Foto struknya, isinya langsung dibaca jadi satu sesi belanja — tidak perlu ketik satu per satu.</string>
+    <string name="scan_intro_cta">Pilih foto</string>
+    <string name="scan_intro_hint">Fotonya dikirim ke OpenRouter untuk dibaca. Selain itu tidak ada data yang keluar dari HP.</string>
+    <string name="scan_unavailable_title">Scan belum aktif</string>
+    <string name="scan_unavailable_message">Build ini belum punya kunci OpenRouter. Isi openrouter.apiKey di local.properties lalu build ulang.</string>
+    <string name="scan_review_title">Cek hasil bacanya</string>
+    <string name="scan_review_message">Semua baris diambil dari foto, jadi tolong dicek dulu. Ketuk item untuk membetulkan.</string>
+    <string name="scan_trip_name_label">Nama belanja</string>
+    <string name="scan_trip_name_placeholder">Belanja mingguan</string>
+    <string name="scan_store_label">Toko</string>
+    <string name="scan_store_placeholder">Alfamart</string>
+    <string name="scan_date_label">Tanggal</string>
+    <string name="scan_date_placeholder">h/b/tttt</string>
+    <string name="scan_date_guessed">Struknya tidak ada tanggal, jadi diisi tanggal hari ini.</string>
+    <string name="scan_items_title">Belanjaan</string>
+    <string name="scan_retake">Foto lain</string>
+    <string name="scan_save">Simpan belanja</string>
+    <string name="scan_toast_saved">Belanja tersimpan</string>
+    <string name="scan_toast_invalid_date">Cek tanggalnya — tulis h/b/tttt</string>
+    <string name="scan_error_missing_key">Build ini belum punya kunci OpenRouter. Isi openrouter.apiKey di local.properties lalu build ulang.</string>
+    <string name="scan_error_request">Tidak bisa menghubungi OpenRouter. Cek koneksi lalu coba lagi.</string>
+    <string name="scan_error_unreadable">Balasannya tidak terbaca. Coba foto lagi.</string>
+    <string name="scan_error_no_items">Tidak ada belanjaan yang terbaca di foto itu. Coba foto lebih jelas dan struknya masuk semua.</string>
+    <string name="scan_error_generic">Struknya tidak bisa dibaca.</string>
+    <plurals name="scan_review_count">
+        <item quantity="one">%1$d item terbaca</item>
+        <item quantity="other">%1$d item terbaca</item>
+    </plurals>
+
 </resources>

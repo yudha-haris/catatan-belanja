@@ -47,6 +47,11 @@ sealed interface AppDestination {
         override val route: String = Pattern.PRESET_LANGUAGE
     }
 
+    /** Riwayat > Scan struk: a trip logged from a photograph of its paper receipt. */
+    data object ScanReceipt : AppDestination {
+        override val route: String = Pattern.SCAN_RECEIPT
+    }
+
     /** Daftar belanja — the plan for the next trip. */
     data object ShoppingList : AppDestination {
         override val route: String = Pattern.SHOPPING_LIST
@@ -103,6 +108,7 @@ sealed interface AppDestination {
         const val PRESET_BRANDS = "$PRESET_PATH/brands"
         const val PRESET_LANGUAGE = "$PRESET_PATH/language"
         const val SHOPPING_LIST = "list"
+        const val SCAN_RECEIPT = "scan"
         const val LIVE_SESSION = "$LIVE_SESSION_PATH?${Arg.REPEAT_FROM}={${Arg.REPEAT_FROM}}"
         const val SESSION_DETAIL = "$SESSION_DETAIL_PATH/{${Arg.SESSION_ID}}"
         const val COMPARE = "$COMPARE_PATH/{${Arg.A_ID}}/{${Arg.B_ID}}"

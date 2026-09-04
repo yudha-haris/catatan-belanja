@@ -35,6 +35,7 @@ fun HistoryScreen(
     onOpenDetail: (String) -> Unit,
     onOpenCompare: (String, String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenScanReceipt: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = koinViewModel(),
 ) {
@@ -112,6 +113,11 @@ fun HistoryScreen(
                         )
                     }
                     AppIconButton(
+                        onClick = onOpenScanReceipt,
+                        contentDescription = stringResource(R.string.scan_title),
+                        emoji = SCAN_EMOJI,
+                    )
+                    AppIconButton(
                         onClick = onOpenSettings,
                         contentDescription = stringResource(R.string.common_cd_settings),
                         icon = Icons.Rounded.Settings,
@@ -125,6 +131,7 @@ fun HistoryScreen(
             val loaded = state.loadState is UiState.Success
             if (loaded) {
                 HistoryEmptyContent(
+                    onScanReceipt = onOpenScanReceipt,
                     onSeedDemo = viewModel::seedDemo,
                     modifier = Modifier.padding(AppTheme.shapes.listPadding),
                 )
@@ -144,3 +151,4 @@ fun HistoryScreen(
 }
 
 private const val COMPARE_EMOJI = "⇄"
+private const val SCAN_EMOJI = "🧾"

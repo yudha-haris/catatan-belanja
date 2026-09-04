@@ -719,4 +719,39 @@
     <string name="preset_language_toast_applied">Language applied</string>
     <string name="preset_language_note_title">What stays as it is</string>
     <string name="preset_language_note_message">Item, category and brand names are your own data, so they are never translated. Prices stay in rupiah.</string>
+
+    <!-- ============ scan: reading an old paper receipt ============ -->
+    <string name="scan_title">Scan receipt</string>
+    <string name="scan_subtitle">Log an old trip from its receipt</string>
+    <string name="history_scan_cta">Scan</string>
+    <string name="scan_intro_title">Scan an old receipt</string>
+    <string name="scan_intro_message">Photograph a receipt and its items are read into a finished trip, so you don\'t have to type them in one by one.</string>
+    <string name="scan_intro_cta">Choose a photo</string>
+    <string name="scan_intro_hint">The photo is sent to OpenRouter to be read. Nothing else in the app leaves your phone.</string>
+    <string name="scan_unavailable_title">Scanning is off</string>
+    <string name="scan_unavailable_message">This build has no OpenRouter key. Put openrouter.apiKey in local.properties and build again.</string>
+    <string name="scan_review_title">Check what was read</string>
+    <string name="scan_review_message">Every line came off the photo, so give it a look. Tap an item to fix it.</string>
+    <string name="scan_trip_name_label">Trip name</string>
+    <string name="scan_trip_name_placeholder">Weekly shop</string>
+    <string name="scan_store_label">Store</string>
+    <string name="scan_store_placeholder">Alfamart</string>
+    <string name="scan_date_label">Date</string>
+    <string name="scan_date_placeholder">d/m/yyyy</string>
+    <string name="scan_date_guessed">The receipt gave no date, so today\'s is filled in.</string>
+    <string name="scan_items_title">Items</string>
+    <string name="scan_retake">Another photo</string>
+    <string name="scan_save">Save trip</string>
+    <string name="scan_toast_saved">Trip saved</string>
+    <string name="scan_toast_invalid_date">Check the date — write it as d/m/yyyy</string>
+    <string name="scan_error_missing_key">No OpenRouter key in this build. Put openrouter.apiKey in local.properties and build again.</string>
+    <string name="scan_error_request">Could not reach OpenRouter. Check the connection and try again.</string>
+    <string name="scan_error_unreadable">The reply could not be read. Try the photo again.</string>
+    <string name="scan_error_no_items">No items were found on that photo. Try a sharper shot with the whole receipt in frame.</string>
+    <string name="scan_error_generic">The receipt could not be scanned.</string>
+    <plurals name="scan_review_count">
+        <item quantity="one">%1$d item read</item>
+        <item quantity="other">%1$d items read</item>
+    </plurals>
+
 </resources>

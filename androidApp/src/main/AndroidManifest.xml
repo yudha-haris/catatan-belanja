@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- The one thing this app puts on the network: a photographed receipt sent to OpenRouter to
+         be read back as line items. Everything else — the database, the backup file, the receipt
+         card it shares — stays on the device. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".android.CatatanBelanjaApp"
         android:allowBackup="true"

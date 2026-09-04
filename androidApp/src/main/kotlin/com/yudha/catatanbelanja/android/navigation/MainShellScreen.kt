@@ -48,6 +48,7 @@ fun MainShellScreen(
     onOpenPriceTrend: (String?) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenList: () -> Unit,
+    onOpenScanReceipt: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(TAB_SHOPPING) }
@@ -96,6 +97,7 @@ fun MainShellScreen(
                 onOpenDetail = onOpenSessionDetail,
                 onOpenCompare = onOpenCompare,
                 onOpenSettings = onOpenSettings,
+                onOpenScanReceipt = onOpenScanReceipt,
                 modifier = Modifier.shownWhen(selectedTab == TAB_HISTORY),
                 viewModel = historyViewModel,
             )

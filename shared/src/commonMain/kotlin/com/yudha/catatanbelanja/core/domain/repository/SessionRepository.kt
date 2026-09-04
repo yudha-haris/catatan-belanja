@@ -18,6 +18,24 @@ interface SessionRepository {
     suspend fun deleteSession(sessionId: String): Resource<Unit>
 
     /**
+     * Writes a trip that already happened — one read off a photographed receipt rather than logged
+     * while it was going on — and returns its id. It lands finished, dated [purchasedAt] rather
+     * than now, so the history, the price trends and the monthly totals all place it where the
+     * paper says it belongs.
+     *
+     * Unrelated to [startSession]: an import never becomes the active session, so it works while a
+     * live trip is running. [photo] is the scanned picture itself, already scaled and encoded, kept
+     * beside the numbers taken off it.
+     */
+    suspend fun importFinishedSession(
+        name: String,
+        store: String,
+        purchasedAt: Long,
+        items: List<ShoppingItem>,
+        photo: ByteArray?,
+    ): Resource<String>
+
+    /**
      * Files [bytes] as this session's receipt photo, replacing any earlier one. The caller has
      * already scaled and encoded the picture — the repository only decides where it lives.
      */

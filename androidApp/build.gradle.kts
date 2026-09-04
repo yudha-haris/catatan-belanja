@@ -16,6 +16,23 @@ val keystoreProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+/**
+ * Receipt scanning talks to OpenRouter, and the key that pays for it is nobody's business but the
+ * person who built the APK. It is read from `local.properties` — gitignored, and already the file
+ * the SDK path lives in — so a clone without one still builds; the app then reports the key as
+ * missing rather than firing a request that would be rejected anyway.
+ *
+ *     openrouter.apiKey=sk-or-v1-...
+ *     openrouter.model=google/gemini-3.8-flash
+ */
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun localProperty(key: String, fallback: String): String =
+    (localProperties.getProperty(key) ?: fallback).trim()
+
 android {
     namespace = "com.yudha.catatanbelanja"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -26,6 +43,17 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0.0"
+
+        buildConfigField(
+            "String",
+            "OPENROUTER_API_KEY",
+            "\"" + localProperty("openrouter.apiKey", "<API_KEY>") + "\"",
+        )
+        buildConfigField(
+            "String",
+            "OPENROUTER_MODEL",
+            "\"" + localProperty("openrouter.model", "google/gemini-3.8-flash") + "\"",
+        )
     }
 
     signingConfigs {
@@ -57,6 +85,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {

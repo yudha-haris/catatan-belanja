@@ -86,6 +86,35 @@ class SessionRepositoryImpl(
         resourceOf(MSG_DELETE_SESSION) { deleteSessionAndPhoto(sessionId) }
 
     /**
+     * The id is generated up front so the photo can be written *before* the row that points at it,
+     * which lets the session, its items and its photo row all land in [SessionDao]'s one
+     * transaction. Import the other way round — insert, then attach — and a failed write leaves a
+     * saved trip the user would have to re-scan a picture onto.
+     */
+    override suspend fun importFinishedSession(
+        name: String,
+        store: String,
+        purchasedAt: Long,
+        items: List<ShoppingItem>,
+        photo: ByteArray?,
+    ): Resource<String> = resourceOf(MSG_IMPORT_SESSION) {
+        val sessionId = idGenerator.next()
+        val path = photo?.let { imageStore.save(PHOTO_PREFIX + sessionId + PHOTO_SUFFIX, it) }
+        sessionDao.insertSession(
+            ShoppingSession(
+                id = sessionId,
+                name = name,
+                store = store,
+                startedAt = purchasedAt,
+                endedAt = purchasedAt,
+                items = items,
+                receiptPhoto = path,
+            ),
+        )
+        sessionId
+    }
+
+    /**
      * The picture replaces whatever was there, and the old file goes with it. The file is named
      * after the session itself, so a trip owns exactly one receipt photo however many times the
      * shot is retaken.
@@ -149,6 +178,7 @@ class SessionRepositoryImpl(
         private const val MSG_FINISH_SESSION = "Failed to finish the session"
         private const val MSG_CANCEL_SESSION = "Failed to cancel the active session"
         private const val MSG_DELETE_SESSION = "Failed to delete the session"
+        private const val MSG_IMPORT_SESSION = "Failed to save the scanned receipt"
         private const val MSG_ATTACH_PHOTO = "Failed to save the receipt photo"
         private const val MSG_REMOVE_PHOTO = "Failed to remove the receipt photo"
         private const val MSG_SHARE_RECEIPT = "Failed to share the receipt"
