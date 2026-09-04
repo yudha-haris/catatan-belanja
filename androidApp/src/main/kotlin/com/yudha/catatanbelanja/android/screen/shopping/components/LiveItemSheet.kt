@@ -1,0 +1,120 @@
+package com.yudha.catatanbelanja.android.screen.shopping.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import com.yudha.catatanbelanja.R
+import com.yudha.catatanbelanja.android.designsystem.component.button.AppButton
+import com.yudha.catatanbelanja.android.designsystem.component.button.AppButtonVariant
+import com.yudha.catatanbelanja.android.designsystem.component.feedback.AppBottomSheet
+import com.yudha.catatanbelanja.android.designsystem.component.input.AppMoneyField
+import com.yudha.catatanbelanja.android.designsystem.component.input.AppTextField
+import com.yudha.catatanbelanja.android.designsystem.component.input.AppUnitDropdown
+import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
+import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
+import com.yudha.catatanbelanja.android.format.toQtyLabel
+import com.yudha.catatanbelanja.features.shopping.domain.model.ShoppingItemView
+
+/** `itemSheet()`: fix a typo, add the brand you forgot, or throw the item back out of the cart. */
+@Composable
+internal fun LiveItemSheet(
+    view: ShoppingItemView,
+    unit: String,
+    onSave: (name: String, qtyText: String, unit: String, note: String, priceText: String) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val item = view.item
+    var name by remember(item.id) { mutableStateOf(item.name) }
+    var qty by remember(item.id) { mutableStateOf(item.qty.toQtyLabel()) }
+    var selectedUnit by remember(item.id) { mutableStateOf(unit) }
+    var note by remember(item.id) { mutableStateOf(item.note) }
+    var price by remember(item.id) { mutableIntStateOf(item.price) }
+
+    AppBottomSheet(onDismiss = onDismiss, modifier = modifier) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x8)) {
+            Text(text = view.emoji, style = AppTheme.typography.sheetTitle)
+            Text(
+                text = item.name,
+                style = AppTheme.typography.sheetTitle,
+                color = AppTheme.colors.ink,
+            )
+        }
+        Spacer(Modifier.height(Spacing.x16))
+
+        AppTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = stringResource(R.string.common_item_name_label),
+        )
+        Spacer(Modifier.height(Spacing.x12))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x10),
+        ) {
+            AppTextField(
+                value = qty,
+                onValueChange = { qty = it },
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.common_qty_label),
+                placeholder = stringResource(R.string.common_item_qty_placeholder),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            AppUnitDropdown(
+                value = selectedUnit,
+                onValueChange = { selectedUnit = it },
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.common_unit_label),
+            )
+        }
+        Spacer(Modifier.height(Spacing.x12))
+
+        AppMoneyField(
+            value = price,
+            onValueChange = { price = it },
+            label = stringResource(R.string.common_price_label),
+        )
+        Spacer(Modifier.height(Spacing.x12))
+
+        AppTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = stringResource(R.string.common_item_note_label),
+            optionalLabel = stringResource(R.string.common_optional),
+            placeholder = stringResource(R.string.common_item_note_placeholder),
+        )
+        Spacer(Modifier.height(Spacing.x20))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x10),
+        ) {
+            AppButton(
+                text = stringResource(R.string.common_delete),
+                onClick = onDelete,
+                modifier = Modifier.weight(1f),
+                variant = AppButtonVariant.Danger,
+            )
+            AppButton(
+                text = stringResource(R.string.common_save),
+                onClick = { onSave(name, qty, selectedUnit, note, price.toString()) },
+                modifier = Modifier.weight(2f),
+            )
+        }
+    }
+}
