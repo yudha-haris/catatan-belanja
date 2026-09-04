@@ -587,6 +587,40 @@
     <string name="trend_empty_title">Belum ada tren</string>
     <string name="trend_empty_message">Beli barang yang sama minimal dua kali, nanti tren harganya muncul di sini.</string>
 
+    <!-- ============ receipt photo: the picture of the paper struk ============ -->
+    <string name="photo_card_title">Foto struk</string>
+    <string name="photo_card_hint_empty">Foto struk aslinya juga — berguna kalau nanti ada harga yang perlu dicek.</string>
+    <string name="photo_card_hint_filled">Ketuk fotonya untuk lihat ukuran penuh.</string>
+    <string name="photo_card_add">Tambah foto</string>
+    <string name="photo_source_title">Foto struk</string>
+    <string name="photo_source_message">Foto struknya sekarang, atau pilih yang sudah ada di ponsel.</string>
+    <string name="photo_source_camera">Ambil foto</string>
+    <string name="photo_source_gallery">Pilih dari galeri</string>
+    <string name="photo_viewer_title">Foto struk</string>
+    <string name="photo_viewer_replace">Ganti foto</string>
+    <string name="photo_viewer_remove">Hapus foto</string>
+    <string name="photo_missing">Fotonya sudah tidak ada di ponsel ini.</string>
+    <string name="photo_cd">Foto struk belanja</string>
+    <string name="photo_toast_attached">Foto struk disimpan</string>
+    <string name="photo_toast_removed">Foto struk dihapus</string>
+    <string name="photo_toast_failed">Gambarnya tidak bisa dibaca</string>
+    <string name="photo_remove_sheet_title">Hapus foto ini?</string>
+    <string name="photo_remove_sheet_message">Catatan belanjanya tetap ada, cuma fotonya yang hilang.</string>
+
+    <!-- ============ receipt share: the trip printed as a till roll ============ -->
+    <string name="receipt_share_cd">Bagikan struk</string>
+    <string name="receipt_share_sheet_title">Bagikan struk ini</string>
+    <string name="receipt_share_sheet_hint">Gambar satu sesi belanja, siap dikirim.</string>
+    <string name="receipt_share_confirm">Bagikan</string>
+    <string name="receipt_share_brand">CATATAN BELANJA</string>
+    <string name="receipt_share_items_header">BARANG</string>
+    <string name="receipt_share_amount_header">HARGA</string>
+    <string name="receipt_share_total">TOTAL</string>
+    <string name="receipt_share_stamp">LUNAS</string>
+    <string name="receipt_share_footer">Terima kasih! Dicatat pakai Catatan Belanja 🛍️</string>
+    <string name="receipt_share_toast_shared">Struk siap dibagikan</string>
+    <string name="receipt_share_date">%1$s · %2$s</string>
+
     <!-- ============ preset: Pengaturan > Preset, empat daftar yang ditawarkan aplikasi ============ -->
     <string name="settings_preset_title">Preset</string>
     <string name="settings_preset_row_title">Daftar preset</string>

@@ -16,4 +16,19 @@ interface SessionRepository {
     suspend fun finishSession(sessionId: String, name: String): Resource<Unit>
     suspend fun cancelActiveSession(): Resource<Unit>
     suspend fun deleteSession(sessionId: String): Resource<Unit>
+
+    /**
+     * Files [bytes] as this session's receipt photo, replacing any earlier one. The caller has
+     * already scaled and encoded the picture — the repository only decides where it lives.
+     */
+    suspend fun attachReceiptPhoto(sessionId: String, bytes: ByteArray): Resource<Unit>
+
+    /** Drops the receipt photo, file and all. A session with none is left alone. */
+    suspend fun removeReceiptPhoto(sessionId: String): Resource<Unit>
+
+    /**
+     * Hands the rendered receipt card to the system share sheet. [image] is PNG bytes drawn by the
+     * UI, because only the UI knows what the receipt looks like.
+     */
+    suspend fun shareReceiptImage(sessionId: String, image: ByteArray): Resource<Unit>
 }

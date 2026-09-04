@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="backups" path="backups/" />
+    <!-- Where AndroidFileSharer stages a rendered receipt on its way to the share sheet. -->
+    <cache-path name="shares" path="shares/" />
+    <!-- Where the camera app is told to write the photo it takes, before the app scales it down
+         and hands the result to ImageStore. Cache, because the file is spent once that is done. -->
+    <cache-path name="captures" path="captures/" />
 </paths>

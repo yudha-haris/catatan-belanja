@@ -590,6 +590,40 @@
     <string name="trend_empty_title">No trend yet</string>
     <string name="trend_empty_message">Buy the same thing twice and its price trend shows up here.</string>
 
+    <!-- ============ receipt photo: the picture of the paper struk ============ -->
+    <string name="photo_card_title">Receipt photo</string>
+    <string name="photo_card_hint_empty">Snap the paper one too — handy when a price needs checking later.</string>
+    <string name="photo_card_hint_filled">Tap the photo to see it full size.</string>
+    <string name="photo_card_add">Add a photo</string>
+    <string name="photo_source_title">Receipt photo</string>
+    <string name="photo_source_message">Photograph the receipt now, or pick one already on your phone.</string>
+    <string name="photo_source_camera">Take a photo</string>
+    <string name="photo_source_gallery">Pick from gallery</string>
+    <string name="photo_viewer_title">Receipt photo</string>
+    <string name="photo_viewer_replace">Replace photo</string>
+    <string name="photo_viewer_remove">Remove photo</string>
+    <string name="photo_missing">The photo is no longer on this phone.</string>
+    <string name="photo_cd">Photo of the paper receipt</string>
+    <string name="photo_toast_attached">Receipt photo saved</string>
+    <string name="photo_toast_removed">Receipt photo removed</string>
+    <string name="photo_toast_failed">That picture could not be read</string>
+    <string name="photo_remove_sheet_title">Remove this photo?</string>
+    <string name="photo_remove_sheet_message">The numbers stay; only the picture goes.</string>
+
+    <!-- ============ receipt share: the trip printed as a till roll ============ -->
+    <string name="receipt_share_cd">Share receipt</string>
+    <string name="receipt_share_sheet_title">Share this receipt</string>
+    <string name="receipt_share_sheet_hint">A picture of the whole trip, ready to send.</string>
+    <string name="receipt_share_confirm">Share</string>
+    <string name="receipt_share_brand">CATATAN BELANJA</string>
+    <string name="receipt_share_items_header">ITEM</string>
+    <string name="receipt_share_amount_header">AMOUNT</string>
+    <string name="receipt_share_total">TOTAL</string>
+    <string name="receipt_share_stamp">PAID</string>
+    <string name="receipt_share_footer">Thank you! Logged with Catatan Belanja 🛍️</string>
+    <string name="receipt_share_toast_shared">Receipt ready to share</string>
+    <string name="receipt_share_date">%1$s · %2$s</string>
+
     <!-- ============ preset: Settings > Preset, the four lists the app offers you ============ -->
     <string name="settings_preset_title">Presets</string>
     <string name="settings_preset_row_title">Preset lists</string>

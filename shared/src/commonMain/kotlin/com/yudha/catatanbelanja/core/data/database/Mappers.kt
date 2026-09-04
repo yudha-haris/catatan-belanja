@@ -34,13 +34,17 @@ import com.yudha.catatanbelanja.db.Stock_reading
 import com.yudha.catatanbelanja.db.Trend_qty_override
 import com.yudha.catatanbelanja.db.Trend_setting
 
-internal fun Session.toDomain(items: List<ShoppingItem>): ShoppingSession = ShoppingSession(
+internal fun Session.toDomain(
+    items: List<ShoppingItem>,
+    receiptPhoto: String? = null,
+): ShoppingSession = ShoppingSession(
     id = id,
     name = name,
     store = store,
     startedAt = started_at,
     endedAt = ended_at,
     items = items,
+    receiptPhoto = receiptPhoto,
 )
 
 internal fun Session_item.toDomain(): ShoppingItem = ShoppingItem(
@@ -96,13 +100,17 @@ internal fun Stock_rate.toDomain(): StockRate = StockRate(
  * `selectFinished` filters on `ended_at IS NOT NULL`, so SQLDelight narrows that column to
  * non-null and generates its own row type instead of reusing [Session].
  */
-internal fun SelectFinished.toDomain(items: List<ShoppingItem>): ShoppingSession = ShoppingSession(
+internal fun SelectFinished.toDomain(
+    items: List<ShoppingItem>,
+    receiptPhoto: String? = null,
+): ShoppingSession = ShoppingSession(
     id = id,
     name = name,
     store = store,
     startedAt = started_at,
     endedAt = ended_at,
     items = items,
+    receiptPhoto = receiptPhoto,
 )
 
 internal fun Shopping_list.toDomain(items: List<ShoppingListItem>): ShoppingList = ShoppingList(

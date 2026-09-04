@@ -1,0 +1,42 @@
+-- The photographed paper receipt — the one the cashier hands over — for one shopping session.
+--
+-- A table of its own rather than a column on `session`: a migration is analysed against the
+-- migrations before it and never against the `.sq` files, so a `.sqm` cannot ALTER a table that
+-- only Session.sq declares (see docs/architecture.md §5). For the same reason there is no
+-- REFERENCES session(id) clause; SessionDao drops these rows itself, inside the very transactions
+-- that delete the trip. The CREATE below is byte-identical to the one in 5.sqm.
+CREATE TABLE session_photo (
+    session_id TEXT NOT NULL PRIMARY KEY,
+    path       TEXT NOT NULL,
+    added_at   INTEGER NOT NULL
+);
+
+selectBySessionId:
+SELECT *
+FROM session_photo
+WHERE session_id = ?;
+
+selectBySessionIds:
+SELECT *
+FROM session_photo
+WHERE session_id IN ?;
+
+selectAllPaths:
+SELECT path
+FROM session_photo;
+
+selectPathBySessionId:
+SELECT path
+FROM session_photo
+WHERE session_id = ?;
+
+upsert:
+INSERT OR REPLACE INTO session_photo (session_id, path, added_at)
+VALUES (?, ?, ?);
+
+deleteBySessionId:
+DELETE FROM session_photo
+WHERE session_id = ?;
+
+deleteAll:
+DELETE FROM session_photo;

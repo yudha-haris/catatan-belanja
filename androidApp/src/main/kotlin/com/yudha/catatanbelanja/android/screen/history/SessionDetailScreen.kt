@@ -12,11 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yudha.catatanbelanja.R
+import com.yudha.catatanbelanja.android.designsystem.component.button.AppIconButton
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.ConfirmationBottomSheet
+import com.yudha.catatanbelanja.android.designsystem.component.feedback.PhotoSourceBottomSheet
+import com.yudha.catatanbelanja.android.designsystem.component.feedback.ReceiptPhotoBottomSheet
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.LocalAppUi
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScaffold
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScreenHeader
 import com.yudha.catatanbelanja.android.format.toLongDateLabel
+import com.yudha.catatanbelanja.android.photo.rememberReceiptPhotoPicker
+import com.yudha.catatanbelanja.android.screen.history.components.ReceiptShareSheet
 import com.yudha.catatanbelanja.android.screen.history.components.SessionDetailCompareSheet
 import com.yudha.catatanbelanja.android.screen.history.components.SessionDetailContent
 import com.yudha.catatanbelanja.android.screen.history.components.SessionDetailItemSheet
@@ -25,6 +30,8 @@ import com.yudha.catatanbelanja.features.history.domain.model.SessionItemRow
 import com.yudha.catatanbelanja.features.history.presentation.SessionDetailEffect
 import com.yudha.catatanbelanja.features.history.presentation.SessionDetailViewModel
 import org.koin.androidx.compose.koinViewModel
+
+private const val SHARE_EMOJI = "📤"
 
 /** One finished session — the prototype's `detailView()`. Pushed route, no tab bar. */
 @Composable
@@ -46,6 +53,27 @@ fun SessionDetailScreen(
     var editingRow by remember { mutableStateOf<SessionItemRow?>(null) }
     var showComparePicker by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showShareSheet by remember { mutableStateOf(false) }
+    var showPhotoSource by remember { mutableStateOf(false) }
+    var showPhotoViewer by remember { mutableStateOf(false) }
+    var showPhotoRemoveConfirm by remember { mutableStateOf(false) }
+
+    val photoFailedMessage = stringResource(R.string.photo_toast_failed)
+    val photoAttachedMessage = stringResource(R.string.photo_toast_attached)
+    val photoRemovedMessage = stringResource(R.string.photo_toast_removed)
+    val receiptSharedMessage = stringResource(R.string.receipt_share_toast_shared)
+
+    val photoPicker = rememberReceiptPhotoPicker(
+        onPhoto = { bytes ->
+            showPhotoSource = false
+            showPhotoViewer = false
+            viewModel.attachReceiptPhoto(bytes)
+        },
+        onFailed = {
+            showPhotoSource = false
+            appUi.showToast(photoFailedMessage)
+        },
+    )
 
     LaunchedEffect(Unit) {
         viewModel.load(sessionId)
@@ -58,6 +86,12 @@ fun SessionDetailScreen(
                 }
                 SessionDetailEffect.ItemSaved -> appUi.showToast(itemSavedMessage)
                 SessionDetailEffect.ItemDeleted -> appUi.showToast(itemDeletedMessage)
+                SessionDetailEffect.PhotoAttached -> appUi.showToast(photoAttachedMessage)
+                SessionDetailEffect.PhotoRemoved -> appUi.showToast(photoRemovedMessage)
+                SessionDetailEffect.ReceiptShared -> {
+                    showShareSheet = false
+                    appUi.showToast(receiptSharedMessage)
+                }
                 is SessionDetailEffect.OpenCompare -> onOpenCompare(effect.aId, effect.bId)
                 // The live session screen raises the "daftar sebelumnya…" hint once it is there.
                 is SessionDetailEffect.OpenLiveSession -> onOpenLiveSession(effect.itemNames)
@@ -100,6 +134,13 @@ fun SessionDetailScreen(
                     )
                 },
                 onBack = onBack,
+                actions = {
+                    AppIconButton(
+                        onClick = { showShareSheet = true },
+                        contentDescription = stringResource(R.string.receipt_share_cd),
+                        emoji = SHARE_EMOJI,
+                    )
+                },
             )
         }
     }
@@ -119,6 +160,8 @@ fun SessionDetailScreen(
             onRepeatSession = viewModel::repeatSession,
             onItemClicked = { row -> editingRow = row },
             onDeleteSession = { showDeleteConfirm = true },
+            onAddPhoto = { showPhotoSource = true },
+            onOpenPhoto = { showPhotoViewer = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -157,6 +200,66 @@ fun SessionDetailScreen(
                 viewModel.compareWith(otherId)
             },
             onDismiss = { showComparePicker = false },
+        )
+    }
+
+    // `summary` is still nullable out here: the null guard above only covers the scaffold body.
+    if (showShareSheet && summary != null) {
+        ReceiptShareSheet(
+            summary = summary,
+            rows = state.itemRows,
+            onShare = viewModel::shareReceiptImage,
+            onDismiss = { showShareSheet = false },
+        )
+    }
+
+    if (showPhotoSource) {
+        PhotoSourceBottomSheet(
+            title = stringResource(R.string.photo_source_title),
+            message = stringResource(R.string.photo_source_message),
+            cameraText = stringResource(R.string.photo_source_camera),
+            galleryText = stringResource(R.string.photo_source_gallery),
+            cancelText = stringResource(R.string.common_cancel),
+            canUseCamera = photoPicker.canTakePhoto,
+            onCamera = photoPicker::takePhoto,
+            onGallery = photoPicker::pickFromGallery,
+            onDismiss = { showPhotoSource = false },
+        )
+    }
+
+    val photoPath = summary?.session?.receiptPhoto
+    if (showPhotoViewer && photoPath != null) {
+        ReceiptPhotoBottomSheet(
+            title = stringResource(R.string.photo_viewer_title),
+            photoPath = photoPath,
+            photoContentDescription = stringResource(R.string.photo_cd),
+            missingLabel = stringResource(R.string.photo_missing),
+            replaceText = stringResource(R.string.photo_viewer_replace),
+            removeText = stringResource(R.string.photo_viewer_remove),
+            onReplace = {
+                showPhotoViewer = false
+                showPhotoSource = true
+            },
+            onRemove = {
+                showPhotoViewer = false
+                showPhotoRemoveConfirm = true
+            },
+            onDismiss = { showPhotoViewer = false },
+        )
+    }
+
+    if (showPhotoRemoveConfirm) {
+        ConfirmationBottomSheet(
+            title = stringResource(R.string.photo_remove_sheet_title),
+            message = stringResource(R.string.photo_remove_sheet_message),
+            confirmText = stringResource(R.string.common_delete),
+            onConfirm = {
+                showPhotoRemoveConfirm = false
+                viewModel.removeReceiptPhoto()
+            },
+            onDismiss = { showPhotoRemoveConfirm = false },
+            cancelText = stringResource(R.string.common_back),
+            isDanger = true,
         )
     }
 

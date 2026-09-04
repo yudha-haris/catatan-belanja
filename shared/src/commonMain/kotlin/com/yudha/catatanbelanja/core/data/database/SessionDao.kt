@@ -20,18 +20,40 @@ class SessionDao(
     // transaction. A correction that outlived its receipt would be invisible and permanent.
     private val trendOverrides = database.trendQtyOverrideQueries
 
+    // Receipt photos hang off sessions and carry no foreign key either (see SessionPhoto.sq), so
+    // they join the same transactions. Only the row goes here — the image file on disk is the
+    // repository's to remove, since a DAO has no business touching the file system.
+    private val photos = database.sessionPhotoQueries
+
     suspend fun getFinishedSessions(): List<ShoppingSession> = withContext(dispatcher) {
         hydrate(sessions.selectFinished().executeAsList())
     }
 
     suspend fun getActiveSession(): ShoppingSession? = withContext(dispatcher) {
         val row = sessions.selectActive().executeAsOneOrNull() ?: return@withContext null
-        row.toDomain(itemsOf(row.id))
+        row.toDomain(itemsOf(row.id), photoOf(row.id))
     }
 
     suspend fun getSession(id: String): ShoppingSession? = withContext(dispatcher) {
         val row = sessions.selectById(id).executeAsOneOrNull() ?: return@withContext null
-        row.toDomain(itemsOf(row.id))
+        row.toDomain(itemsOf(row.id), photoOf(row.id))
+    }
+
+    /** Every receipt photo path on file, for the wipe that has to delete the images too. */
+    suspend fun getAllPhotoPaths(): List<String> = withContext(dispatcher) {
+        photos.selectAllPaths().executeAsList()
+    }
+
+    suspend fun getPhotoPath(sessionId: String): String? = withContext(dispatcher) {
+        photos.selectPathBySessionId(sessionId).executeAsOneOrNull()
+    }
+
+    suspend fun setPhoto(sessionId: String, path: String, addedAt: Long) = withContext(dispatcher) {
+        photos.upsert(sessionId, path, addedAt)
+    }
+
+    suspend fun clearPhoto(sessionId: String) = withContext(dispatcher) {
+        photos.deleteBySessionId(sessionId)
     }
 
     /** Items of every id in [sessionIds] in one query, keyed by session id. */
@@ -61,6 +83,9 @@ class SessionDao(
             session.items.forEachIndexed { index, item ->
                 insertItemRow(session.id, item, index.toLong())
             }
+            // Only ever set on a session read back out and written again; a fresh trip and an
+            // imported one both arrive without a picture.
+            session.receiptPhoto?.let { path -> photos.upsert(session.id, path, session.startedAt) }
         }
     }
 
@@ -76,6 +101,7 @@ class SessionDao(
     suspend fun deleteSession(sessionId: String) = withContext(dispatcher) {
         database.transaction {
             trendOverrides.deleteBySessionId(sessionId)
+            photos.deleteBySessionId(sessionId)
             items.deleteBySessionId(sessionId)
             sessions.deleteById(sessionId)
         }
@@ -84,6 +110,7 @@ class SessionDao(
     suspend fun deleteAllSessions() = withContext(dispatcher) {
         database.transaction {
             trendOverrides.deleteAll()
+            photos.deleteAll()
             items.deleteAll()
             sessions.deleteAll()
         }
@@ -136,8 +163,12 @@ class SessionDao(
 
     private fun hydrate(rows: List<SelectFinished>): List<ShoppingSession> {
         if (rows.isEmpty()) return emptyList()
-        val grouped = groupItems(rows.map { it.id })
-        return rows.map { row -> row.toDomain(grouped[row.id].orEmpty()) }
+        val ids = rows.map { it.id }
+        val grouped = groupItems(ids)
+        val photoPaths = photos.selectBySessionIds(ids)
+            .executeAsList()
+            .associateBy({ it.session_id }, { it.path })
+        return rows.map { row -> row.toDomain(grouped[row.id].orEmpty(), photoPaths[row.id]) }
     }
 
     private fun groupItems(sessionIds: Collection<String>): Map<String, List<ShoppingItem>> {
@@ -149,4 +180,7 @@ class SessionDao(
 
     private fun itemsOf(sessionId: String): List<ShoppingItem> =
         items.selectBySessionId(sessionId).executeAsList().map { it.toDomain() }
+
+    private fun photoOf(sessionId: String): String? =
+        photos.selectPathBySessionId(sessionId).executeAsOneOrNull()
 }

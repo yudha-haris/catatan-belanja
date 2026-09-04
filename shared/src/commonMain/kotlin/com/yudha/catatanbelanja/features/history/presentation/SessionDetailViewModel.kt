@@ -139,6 +139,51 @@ class SessionDetailViewModel(
         }
     }
 
+    /** See `LiveSessionViewModel.attachReceiptPhoto`: the bytes are already scaled and encoded. */
+    fun attachReceiptPhoto(bytes: ByteArray) {
+        if (_state.value.actionState is UiState.Loading) return
+
+        _state.update { it.copy(actionState = UiState.Loading) }
+        viewModelScope.launch {
+            sessionRepository.attachReceiptPhoto(sessionId, bytes).returnWhen(
+                onSuccess = { onItemChanged(SessionDetailEffect.PhotoAttached) },
+                onError = ::onActionFailed,
+            )
+        }
+    }
+
+    fun removeReceiptPhoto() {
+        if (_state.value.actionState is UiState.Loading) return
+
+        _state.update { it.copy(actionState = UiState.Loading) }
+        viewModelScope.launch {
+            sessionRepository.removeReceiptPhoto(sessionId).returnWhen(
+                onSuccess = { onItemChanged(SessionDetailEffect.PhotoRemoved) },
+                onError = ::onActionFailed,
+            )
+        }
+    }
+
+    /**
+     * [image] is the receipt card the screen just drew, as PNG bytes. The ViewModel never renders
+     * it — what the receipt looks like is the UI's business — it only carries the result to the
+     * repository that owns the share sheet.
+     */
+    fun shareReceiptImage(image: ByteArray) {
+        if (_state.value.actionState is UiState.Loading) return
+
+        _state.update { it.copy(actionState = UiState.Loading) }
+        viewModelScope.launch {
+            sessionRepository.shareReceiptImage(sessionId, image).returnWhen(
+                onSuccess = { _ ->
+                    _state.update { it.copy(actionState = UiState.Success(Unit)) }
+                    _effects.send(SessionDetailEffect.ReceiptShared)
+                },
+                onError = ::onActionFailed,
+            )
+        }
+    }
+
     private suspend fun onItemChanged(effect: SessionDetailEffect) {
         _state.update { it.copy(actionState = UiState.Success(Unit)) }
         _effects.send(effect)

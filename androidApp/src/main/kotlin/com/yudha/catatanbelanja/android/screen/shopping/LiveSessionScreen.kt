@@ -25,8 +25,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yudha.catatanbelanja.R
 import com.yudha.catatanbelanja.android.designsystem.component.button.AppIconButton
 import com.yudha.catatanbelanja.android.designsystem.component.display.ReceiptHeader
+import com.yudha.catatanbelanja.android.designsystem.component.display.ReceiptPhotoCard
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.ConfirmationBottomSheet
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.LocalAppUi
+import com.yudha.catatanbelanja.android.designsystem.component.feedback.PhotoSourceBottomSheet
+import com.yudha.catatanbelanja.android.designsystem.component.feedback.ReceiptPhotoBottomSheet
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScaffold
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppScreenHeader
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppSectionHeader
@@ -35,6 +38,7 @@ import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
 import com.yudha.catatanbelanja.android.format.toDayLabel
 import com.yudha.catatanbelanja.android.format.toRupiah
 import com.yudha.catatanbelanja.android.format.toTimeLabel
+import com.yudha.catatanbelanja.android.photo.rememberReceiptPhotoPicker
 import com.yudha.catatanbelanja.android.screen.shopping.components.LiveAddItemCard
 import com.yudha.catatanbelanja.android.screen.shopping.components.LiveCartEmptyState
 import com.yudha.catatanbelanja.android.screen.shopping.components.LiveCartRow
@@ -70,6 +74,9 @@ fun LiveSessionScreen(
     var showStoreSheet by remember { mutableStateOf(false) }
     var showFinishSheet by remember { mutableStateOf(false) }
     var showCancelSheet by remember { mutableStateOf(false) }
+    var showPhotoSource by remember { mutableStateOf(false) }
+    var showPhotoViewer by remember { mutableStateOf(false) }
+    var showPhotoRemoveConfirm by remember { mutableStateOf(false) }
     // Saveable, not remembered: the strip lives inside the LazyColumn, so a plain remember
     // would collapse it again every time it scrolled out of view.
     var isListExpanded by rememberSaveable { mutableStateOf(false) }
@@ -86,6 +93,21 @@ fun LiveSessionScreen(
     val cancelledMessage = stringResource(R.string.live_toast_cancelled)
     val savedMessage = stringResource(R.string.live_toast_saved)
     val listCompleteMessage = stringResource(R.string.live_toast_list_complete)
+    val photoAttachedMessage = stringResource(R.string.photo_toast_attached)
+    val photoRemovedMessage = stringResource(R.string.photo_toast_removed)
+    val photoFailedMessage = stringResource(R.string.photo_toast_failed)
+
+    val photoPicker = rememberReceiptPhotoPicker(
+        onPhoto = { bytes ->
+            showPhotoSource = false
+            showPhotoViewer = false
+            viewModel.attachReceiptPhoto(bytes)
+        },
+        onFailed = {
+            showPhotoSource = false
+            appUi.showToast(photoFailedMessage)
+        },
+    )
 
     LaunchedEffect(Unit) {
         viewModel.load(repeatFromSessionId)
@@ -182,6 +204,12 @@ fun LiveSessionScreen(
                     }
 
                     LiveSessionEffect.Message.REPEAT_HINT -> appUi.showToast(repeatHintMessage)
+
+                    LiveSessionEffect.Message.PHOTO_ATTACHED ->
+                        appUi.showToast(photoAttachedMessage)
+
+                    LiveSessionEffect.Message.PHOTO_REMOVED ->
+                        appUi.showToast(photoRemovedMessage)
                 }
 
                 is LiveSessionEffect.ShowError -> appUi.showError(effect.failure)
@@ -295,6 +323,26 @@ fun LiveSessionScreen(
                 }
             }
 
+            item(key = "photo") {
+                Spacer(Modifier.height(Spacing.x8))
+                // Below the add form, above the cart: the paper receipt only exists after the
+                // last item has been rung up, so this must never sit between the user and the
+                // field they came here to type in.
+                ReceiptPhotoCard(
+                    title = stringResource(R.string.photo_card_title),
+                    hint = when (session.receiptPhoto) {
+                        null -> stringResource(R.string.photo_card_hint_empty)
+                        else -> stringResource(R.string.photo_card_hint_filled)
+                    },
+                    photoPath = session.receiptPhoto,
+                    addActionText = stringResource(R.string.photo_card_add),
+                    photoContentDescription = stringResource(R.string.photo_cd),
+                    missingLabel = stringResource(R.string.photo_missing),
+                    onAdd = { showPhotoSource = true },
+                    onOpen = { showPhotoViewer = true },
+                )
+            }
+
             item(key = "cartHeader") {
                 AppSectionHeader(
                     title = stringResource(R.string.live_cart_title),
@@ -366,6 +414,56 @@ fun LiveSessionScreen(
             finishedAt = state.finishedAtMillis,
             onConfirm = viewModel::finishSession,
             onDismiss = { showFinishSheet = false },
+        )
+    }
+
+    val receiptPhoto = session.receiptPhoto
+    if (showPhotoViewer && receiptPhoto != null) {
+        ReceiptPhotoBottomSheet(
+            title = stringResource(R.string.photo_viewer_title),
+            photoPath = receiptPhoto,
+            photoContentDescription = stringResource(R.string.photo_cd),
+            missingLabel = stringResource(R.string.photo_missing),
+            replaceText = stringResource(R.string.photo_viewer_replace),
+            removeText = stringResource(R.string.photo_viewer_remove),
+            onReplace = {
+                showPhotoViewer = false
+                showPhotoSource = true
+            },
+            onRemove = {
+                showPhotoViewer = false
+                showPhotoRemoveConfirm = true
+            },
+            onDismiss = { showPhotoViewer = false },
+        )
+    }
+
+    if (showPhotoRemoveConfirm) {
+        ConfirmationBottomSheet(
+            title = stringResource(R.string.photo_remove_sheet_title),
+            message = stringResource(R.string.photo_remove_sheet_message),
+            confirmText = stringResource(R.string.common_delete),
+            onConfirm = {
+                showPhotoRemoveConfirm = false
+                viewModel.removeReceiptPhoto()
+            },
+            onDismiss = { showPhotoRemoveConfirm = false },
+            cancelText = stringResource(R.string.common_back),
+            isDanger = true,
+        )
+    }
+
+    if (showPhotoSource) {
+        PhotoSourceBottomSheet(
+            title = stringResource(R.string.photo_source_title),
+            message = stringResource(R.string.photo_source_message),
+            cameraText = stringResource(R.string.photo_source_camera),
+            galleryText = stringResource(R.string.photo_source_gallery),
+            cancelText = stringResource(R.string.common_cancel),
+            canUseCamera = photoPicker.canTakePhoto,
+            onCamera = photoPicker::takePhoto,
+            onGallery = photoPicker::pickFromGallery,
+            onDismiss = { showPhotoSource = false },
         )
     }
 

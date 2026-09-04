@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import com.yudha.catatanbelanja.R
 import com.yudha.catatanbelanja.android.designsystem.component.button.AppButton
 import com.yudha.catatanbelanja.android.designsystem.component.button.AppButtonVariant
+import com.yudha.catatanbelanja.android.designsystem.component.display.ReceiptPhotoCard
 import com.yudha.catatanbelanja.android.designsystem.component.layout.AppSectionHeader
 import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
 import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
@@ -29,6 +30,8 @@ internal fun SessionDetailContent(
     onRepeatSession: () -> Unit,
     onItemClicked: (SessionItemRow) -> Unit,
     onDeleteSession: () -> Unit,
+    onAddPhoto: () -> Unit,
+    onOpenPhoto: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -44,6 +47,23 @@ internal fun SessionDetailContent(
                 canCompare = state.canCompare,
                 onOpenComparePicker = onOpenComparePicker,
                 onRepeatSession = onRepeatSession,
+            )
+        }
+
+        item(key = "photo") {
+            ReceiptPhotoCard(
+                title = stringResource(R.string.photo_card_title),
+                hint = when (summary.session.receiptPhoto) {
+                    null -> stringResource(R.string.photo_card_hint_empty)
+                    else -> stringResource(R.string.photo_card_hint_filled)
+                },
+                photoPath = summary.session.receiptPhoto,
+                addActionText = stringResource(R.string.photo_card_add),
+                photoContentDescription = stringResource(R.string.photo_cd),
+                missingLabel = stringResource(R.string.photo_missing),
+                onAdd = onAddPhoto,
+                onOpen = onOpenPhoto,
+                modifier = Modifier.padding(bottom = Spacing.x8),
             )
         }
 

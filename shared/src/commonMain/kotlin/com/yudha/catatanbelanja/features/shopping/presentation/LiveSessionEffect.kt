@@ -47,5 +47,7 @@ sealed interface LiveSessionEffect {
         ITEM_SAVED,
         ITEM_DELETED,
         REPEAT_HINT,
+        PHOTO_ATTACHED,
+        PHOTO_REMOVED,
     }
 }

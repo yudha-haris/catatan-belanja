@@ -256,6 +256,29 @@ class LiveSessionViewModel(
         }
     }
 
+    /**
+     * The paper receipt, photographed at the till. [bytes] arrive already scaled and encoded: the
+     * picture came from a camera or a gallery, both of which are screen concerns, and neither the
+     * ViewModel nor the repository is in a position to know how big a JPEG the shot deserves.
+     */
+    fun attachReceiptPhoto(bytes: ByteArray) {
+        val session = _state.value.session ?: return
+        if (_state.value.actionState is UiState.Loading) return
+
+        runAction(LiveSessionEffect.Message.PHOTO_ATTACHED) {
+            sessionRepository.attachReceiptPhoto(session.id, bytes)
+        }
+    }
+
+    fun removeReceiptPhoto() {
+        val session = _state.value.session ?: return
+        if (_state.value.actionState is UiState.Loading) return
+
+        runAction(LiveSessionEffect.Message.PHOTO_REMOVED) {
+            sessionRepository.removeReceiptPhoto(session.id)
+        }
+    }
+
     fun updateStore(store: String) {
         val session = _state.value.session ?: return
         if (_state.value.actionState is UiState.Loading) return

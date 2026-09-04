@@ -46,6 +46,8 @@ data class AppTypography(
     val barLabel: TextStyle,
     val emoji: TextStyle,
     val emojiLarge: TextStyle,
+    val receiptBrand: TextStyle,
+    val receiptStamp: TextStyle,
 )
 
 /**
@@ -178,5 +180,21 @@ fun appTypographyFor(colors: AppColors): AppTypography {
         ),
         emoji = base.copy(fontSize = 20.sp, lineHeight = 24.sp),
         emojiLarge = base.copy(fontSize = 44.sp, lineHeight = 50.sp),
+        // The two tracked-caps tokens the printed receipt needs. Wide letter spacing is what makes
+        // a line read as till-roll small print rather than as another label, and it is a property
+        // of the token rather than something a screen is allowed to add to one.
+        receiptBrand = base.copy(
+            fontSize = 11.sp,
+            lineHeight = 15.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.22.em,
+            color = colors.inkTertiary,
+        ),
+        receiptStamp = base.copy(
+            fontSize = 15.sp,
+            lineHeight = 19.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.16.em,
+        ),
     )
 }

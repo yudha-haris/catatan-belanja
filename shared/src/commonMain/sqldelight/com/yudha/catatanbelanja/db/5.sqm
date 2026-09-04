@@ -1,0 +1,15 @@
+-- v5 -> v6: the photographed receipt. A trip can now carry the picture of the paper struk beside
+-- the numbers typed off it, so the original stays readable when a line item is disputed later.
+--
+-- Byte-identical to the CREATE statement in SessionPhoto.sq, which fresh installs run instead of
+-- this file. No foreign key onto session(id): a migration is analysed against the earlier
+-- migrations only, and `session` is a name only Session.sq declares. SessionDao deletes these rows
+-- explicitly, in the same transactions that drop the session they hang off.
+--
+-- Only the row is dropped there. The image file itself lives outside the database, so
+-- SessionRepositoryImpl deletes it through ImageStore before the row goes.
+CREATE TABLE session_photo (
+    session_id TEXT NOT NULL PRIMARY KEY,
+    path       TEXT NOT NULL,
+    added_at   INTEGER NOT NULL
+);

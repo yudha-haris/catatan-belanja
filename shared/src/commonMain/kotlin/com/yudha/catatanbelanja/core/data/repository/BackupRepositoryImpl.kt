@@ -29,6 +29,7 @@ import com.yudha.catatanbelanja.core.domain.model.StockItem
 import com.yudha.catatanbelanja.core.domain.repository.BackupRepository
 import com.yudha.catatanbelanja.core.domain.service.ClipboardWriter
 import com.yudha.catatanbelanja.core.domain.service.FileSharer
+import com.yudha.catatanbelanja.core.domain.service.ImageStore
 
 /**
  * Import merges, it never overwrites: sessions are matched by id, stock rows by normalized name
@@ -47,6 +48,7 @@ class BackupRepositoryImpl(
     private val idGenerator: IdGenerator,
     private val fileSharer: FileSharer,
     private val clipboardWriter: ClipboardWriter,
+    private val imageStore: ImageStore,
 ) : BackupRepository {
 
     override suspend fun buildBackupJson(): Resource<String> = resourceOf(MSG_BUILD) {
@@ -91,8 +93,12 @@ class BackupRepositoryImpl(
         }
 
     override suspend fun clearAllData(): Resource<Unit> = resourceOf(MSG_CLEAR) {
+        // Read the photo paths before the rows go: after `deleteAllSessions` there is nothing
+        // left to say which files these were, and they would sit in app storage forever.
+        val photoPaths = sessionDao.getAllPhotoPaths()
         // The bulk deletes cover the active session too — `session.deleteAll` spares no row.
         sessionDao.deleteAllSessions()
+        photoPaths.forEach { path -> imageStore.delete(path) }
         stockDao.deleteAllStockItems()
         stockDao.deleteAllCheckLogs()
         shoppingListDao.deleteAllLists()

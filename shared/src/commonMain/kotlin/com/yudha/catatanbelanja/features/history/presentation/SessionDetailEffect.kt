@@ -9,6 +9,13 @@ sealed interface SessionDetailEffect {
 
     data object ItemDeleted : SessionDetailEffect
 
+    data object PhotoAttached : SessionDetailEffect
+
+    data object PhotoRemoved : SessionDetailEffect
+
+    /** The share sheet has been handed the rendered receipt; the screen can close its preview. */
+    data object ReceiptShared : SessionDetailEffect
+
     /** [aId] is always the older session, [bId] the newer one. */
     data class OpenCompare(val aId: String, val bId: String) : SessionDetailEffect
 
