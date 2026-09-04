@@ -1,0 +1,51 @@
+CREATE TABLE session_item (
+    id         TEXT NOT NULL PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    qty        REAL,
+    unit       TEXT,
+    price      INTEGER NOT NULL DEFAULT 0,
+    note       TEXT NOT NULL DEFAULT '',
+    position   INTEGER NOT NULL DEFAULT 0     -- ascending == newest first
+);
+
+CREATE INDEX session_item_session_id ON session_item(session_id);
+
+selectBySessionId:
+SELECT *
+FROM session_item
+WHERE session_id = ?
+ORDER BY position ASC;
+
+selectBySessionIds:
+SELECT *
+FROM session_item
+WHERE session_id IN ?
+ORDER BY session_id ASC, position ASC;
+
+selectMinPosition:
+SELECT position
+FROM session_item
+WHERE session_id = ?
+ORDER BY position ASC
+LIMIT 1;
+
+insert:
+INSERT INTO session_item (id, session_id, name, qty, unit, price, note, position)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE session_item
+SET name = :name, qty = :qty, unit = :unit, price = :price, note = :note
+WHERE id = :id AND session_id = :sessionId;
+
+deleteById:
+DELETE FROM session_item
+WHERE id = :id AND session_id = :sessionId;
+
+deleteBySessionId:
+DELETE FROM session_item
+WHERE session_id = ?;
+
+deleteAll:
+DELETE FROM session_item;

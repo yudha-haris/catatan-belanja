@@ -1,0 +1,32 @@
+CREATE TABLE stock_check_log_item (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    log_id TEXT NOT NULL REFERENCES stock_check_log(id) ON DELETE CASCADE,
+    name   TEXT NOT NULL,
+    qty    REAL NOT NULL,
+    unit   TEXT NOT NULL
+);
+
+CREATE INDEX stock_check_log_item_log_id ON stock_check_log_item(log_id);
+
+selectByLogId:
+SELECT *
+FROM stock_check_log_item
+WHERE log_id = ?
+ORDER BY id ASC;
+
+selectByLogIds:
+SELECT *
+FROM stock_check_log_item
+WHERE log_id IN ?
+ORDER BY log_id ASC, id ASC;
+
+insert:
+INSERT INTO stock_check_log_item (log_id, name, qty, unit)
+VALUES (?, ?, ?, ?);
+
+deleteByLogId:
+DELETE FROM stock_check_log_item
+WHERE log_id = ?;
+
+deleteAll:
+DELETE FROM stock_check_log_item;

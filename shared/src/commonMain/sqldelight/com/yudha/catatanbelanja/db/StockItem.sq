@@ -1,0 +1,34 @@
+CREATE TABLE stock_item (
+    id         TEXT NOT NULL PRIMARY KEY,
+    name       TEXT NOT NULL,
+    qty        REAL NOT NULL DEFAULT 0.0,
+    unit       TEXT NOT NULL DEFAULT 'pcs',
+    min_qty    REAL,
+    full_qty   REAL NOT NULL DEFAULT 0.0,
+    updated_at INTEGER NOT NULL
+);
+
+selectAll:
+SELECT *
+FROM stock_item
+ORDER BY name ASC;
+
+selectById:
+SELECT *
+FROM stock_item
+WHERE id = ?;
+
+upsert:
+INSERT OR REPLACE INTO stock_item (id, name, qty, unit, min_qty, full_qty, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM stock_item
+WHERE id = ?;
+
+deleteAll:
+DELETE FROM stock_item;
+
+countAll:
+SELECT count(*)
+FROM stock_item;

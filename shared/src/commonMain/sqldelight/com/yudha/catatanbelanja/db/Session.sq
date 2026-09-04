@@ -1,0 +1,52 @@
+CREATE TABLE session (
+    id          TEXT NOT NULL PRIMARY KEY,
+    name        TEXT NOT NULL DEFAULT '',
+    store       TEXT NOT NULL DEFAULT '',
+    started_at  INTEGER NOT NULL,
+    ended_at    INTEGER            -- NULL => active session
+);
+
+CREATE INDEX session_ended_at ON session(ended_at);
+
+selectFinished:
+SELECT *
+FROM session
+WHERE ended_at IS NOT NULL
+ORDER BY ended_at DESC;
+
+selectActive:
+SELECT *
+FROM session
+WHERE ended_at IS NULL
+ORDER BY started_at DESC
+LIMIT 1;
+
+selectById:
+SELECT *
+FROM session
+WHERE id = ?;
+
+insertSession:
+INSERT INTO session (id, name, store, started_at, ended_at)
+VALUES (?, ?, ?, ?, ?);
+
+updateStore:
+UPDATE session
+SET store = :store
+WHERE id = :id;
+
+finish:
+UPDATE session
+SET name = :name, ended_at = :endedAt
+WHERE id = :id;
+
+deleteById:
+DELETE FROM session
+WHERE id = ?;
+
+deleteAll:
+DELETE FROM session;
+
+countAll:
+SELECT count(*)
+FROM session;

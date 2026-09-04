@@ -1,0 +1,36 @@
+CREATE TABLE stock_check_log (
+    id         TEXT NOT NULL PRIMARY KEY,
+    month      TEXT NOT NULL UNIQUE,          -- 'YYYY-MM'
+    checked_at INTEGER NOT NULL
+);
+
+selectAll:
+SELECT *
+FROM stock_check_log
+ORDER BY checked_at DESC;
+
+selectById:
+SELECT *
+FROM stock_check_log
+WHERE id = ?;
+
+selectByMonth:
+SELECT *
+FROM stock_check_log
+WHERE month = ?;
+
+insert:
+INSERT INTO stock_check_log (id, month, checked_at)
+VALUES (?, ?, ?);
+
+updateCheckedAt:
+UPDATE stock_check_log
+SET checked_at = :checkedAt
+WHERE id = :id;
+
+deleteById:
+DELETE FROM stock_check_log
+WHERE id = ?;
+
+deleteAll:
+DELETE FROM stock_check_log;

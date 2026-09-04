@@ -1,0 +1,55 @@
+CREATE TABLE shopping_list (
+    id          TEXT NOT NULL PRIMARY KEY,
+    name        TEXT NOT NULL DEFAULT '',
+    created_at  INTEGER NOT NULL,
+    updated_at  INTEGER NOT NULL,
+    is_template INTEGER NOT NULL DEFAULT 0,   -- 1 => a reusable template, never the active list
+    archived_at INTEGER                       -- NULL => still in play
+);
+
+CREATE INDEX shopping_list_state ON shopping_list(is_template, archived_at);
+
+-- One list is "active" at a time: the newest plan that is neither a template nor archived.
+selectActive:
+SELECT *
+FROM shopping_list
+WHERE is_template = 0 AND archived_at IS NULL
+ORDER BY created_at DESC
+LIMIT 1;
+
+selectTemplates:
+SELECT *
+FROM shopping_list
+WHERE is_template = 1
+ORDER BY updated_at DESC;
+
+selectById:
+SELECT *
+FROM shopping_list
+WHERE id = ?;
+
+insert:
+INSERT INTO shopping_list (id, name, created_at, updated_at, is_template, archived_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+rename:
+UPDATE shopping_list
+SET name = :name, updated_at = :updatedAt
+WHERE id = :id;
+
+touch:
+UPDATE shopping_list
+SET updated_at = :updatedAt
+WHERE id = :id;
+
+archive:
+UPDATE shopping_list
+SET archived_at = :archivedAt, updated_at = :archivedAt
+WHERE id = :id;
+
+deleteById:
+DELETE FROM shopping_list
+WHERE id = ?;
+
+deleteAll:
+DELETE FROM shopping_list;
