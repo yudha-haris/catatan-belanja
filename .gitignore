@@ -5,3 +5,8 @@ local.properties
 *.iml
 .DS_Store
 .kotlin/
+
+# Release signing key. Never commit: anyone holding it can publish an update
+# that Android accepts as this app.
+catatan-belanja-release.jks
+keystore.properties
