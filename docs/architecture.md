@@ -891,13 +891,21 @@ deletes the files, so a wipe leaves nothing behind in app storage.
 
 Everything else in this app is offline and stays offline. **One screen** (§11.9) sends **one
 thing** — a photographed receipt — to **one place**, and only when the user presses the button.
-No analytics, no crash reporting, no sync, no silent request anywhere else. `AndroidManifest.xml`
-declares `INTERNET` for this and nothing else.
+No analytics, no crash reporting, no sync, no silent request anywhere else.
+
+Two permissions, both for this and neither a runtime grant: `INTERNET` to send the photograph and
+`ACCESS_NETWORK_STATE` for the offline check below. They are declared in **`:shared`'s** manifest
+— the module holding the code that needs them — and the merger unions them into `:androidApp`,
+which states them again for the reader.
 
 ```kotlin
 interface ReceiptScanner {
     /** [image] is already scaled and JPEG-encoded by the caller (§7a). */
     suspend fun scan(image: ByteArray): ReceiptScan
+}
+
+interface NetworkMonitor {
+    fun isOnline(): Boolean
 }
 
 data class ReceiptScan(
@@ -943,12 +951,21 @@ survives into `Failure.code`, and the screen switches on it:
 | Code | What the user is told |
 |---|---|
 | `SCAN_MISSING_KEY` | put a key in `local.properties` and build again |
+| `SCAN_OFFLINE` | no connection — connect and try again |
 | `SCAN_REQUEST_FAILED` | could not reach OpenRouter — check the connection |
 | `SCAN_UNREADABLE_REPLY` | the reply could not be read; try the photo again |
 | `SCAN_NO_ITEMS` | nothing found on that photo; try a sharper shot |
 
 `ReceiptScanRepositoryImpl` is the one repository that does **not** use `resourceOf`: that wrapper
 flattens every throw into one message, which is exactly what this table exists to avoid.
+
+**Offline is checked twice, and the first check is the one that matters.** `requestPhoto()` asks
+`NetworkMonitor` *before* opening the camera sheet, so someone with no signal is told immediately
+rather than after photographing a receipt and waiting out the 90-second request timeout. The
+scanner asks again before the request itself, because a connection can drop while the camera is
+open. `AndroidNetworkMonitor` requires `NET_CAPABILITY_VALIDATED` as well as
+`NET_CAPABILITY_INTERNET`: café wifi behind a login page has the second and not the first, and is
+precisely the case that would otherwise hang.
 
 **Nothing the scanner returns is a fact.** Every field is a guess off thermal paper, so a scan
 lands on a review screen and reaches the database only when the user presses save.
@@ -1752,9 +1769,14 @@ someone with no history and a stack of receipts is standing.
 
 `ScanReceiptViewModel` / `ScanReceiptState`: `scanState`, `actionState`, `available`, `hasScan`,
 `scanId`, `store`, `purchasedAt`, `dateWasRead`, `rows`, `itemCount`, `total`, `canSave`.
-Actions: `load()`, `scan(image)`, `updateItem(...)`, `deleteItem(id)`,
+Actions: `load()`, `requestPhoto()`, `scan(image)`, `updateItem(...)`, `deleteItem(id)`,
 `save(name, store, dateText)`, `discard()`.
-Effects: `ScanReady`, `InvalidDate`, `ItemDeleted`, `Saved(sessionId)`.
+Effects: `OpenPhotoSource`, `Offline`, `ScanReady`, `InvalidDate`, `ItemDeleted`,
+`Saved(sessionId)`.
+
+**The camera sheet is opened by an effect, not by the button.** `requestPhoto()` checks the
+connection and answers `OpenPhotoSource` or `Offline` (§6b), so the decision lives in one place
+and a user with no signal never gets as far as taking the picture.
 
 Two `UiState`s rather than one, per §3: reading the photo and writing the trip are separate flows
 on one screen, and a failed save must not read as a failed scan.
