@@ -738,6 +738,7 @@
     <string name="scan_toast_saved">Belanja tersimpan</string>
     <string name="scan_toast_invalid_date">Cek tanggalnya — tulis h/b/tttt</string>
     <string name="scan_error_missing_key">Build ini belum punya kunci OpenRouter. Isi openrouter.apiKey di local.properties lalu build ulang.</string>
+    <string name="scan_error_offline">Tidak ada koneksi internet. Scan struk butuh internet — sambungkan dulu lalu coba lagi.</string>
     <string name="scan_error_request">Tidak bisa menghubungi OpenRouter. Cek koneksi lalu coba lagi.</string>
     <string name="scan_error_unreadable">Balasannya tidak terbaca. Coba foto lagi.</string>
     <string name="scan_error_no_items">Tidak ada belanjaan yang terbaca di foto itu. Coba foto lebih jelas dan struknya masuk semua.</string>

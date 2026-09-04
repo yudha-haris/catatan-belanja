@@ -5,6 +5,7 @@ import com.yudha.catatanbelanja.core.common.Resource
 import com.yudha.catatanbelanja.core.data.service.OpenRouterConfig
 import com.yudha.catatanbelanja.core.domain.model.ReceiptScan
 import com.yudha.catatanbelanja.core.domain.repository.ReceiptScanRepository
+import com.yudha.catatanbelanja.core.domain.service.NetworkMonitor
 import com.yudha.catatanbelanja.core.domain.service.ReceiptScanException
 import com.yudha.catatanbelanja.core.domain.service.ReceiptScanner
 import kotlin.coroutines.cancellation.CancellationException
@@ -20,6 +21,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class ReceiptScanRepositoryImpl(
     private val scanner: ReceiptScanner,
     private val config: OpenRouterConfig,
+    private val networkMonitor: NetworkMonitor,
 ) : ReceiptScanRepository {
 
     override suspend fun scan(image: ByteArray): Resource<ReceiptScan> = try {
@@ -39,6 +41,8 @@ class ReceiptScanRepositoryImpl(
     }
 
     override fun isAvailable(): Boolean = config.isConfigured
+
+    override fun isOnline(): Boolean = networkMonitor.isOnline()
 
     private companion object {
         const val MSG_SCAN_FAILED = "Failed to scan the receipt"

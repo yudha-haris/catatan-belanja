@@ -40,9 +40,9 @@ fun networkModule(config: OpenRouterConfig): Module = module {
     }
 
     single<ReceiptScanner> {
-        OpenRouterReceiptScanner(get(), get(), get(), get(ioDispatcherQualifier))
+        OpenRouterReceiptScanner(get(), get(), get(), get(), get(ioDispatcherQualifier))
     }
-    single<ReceiptScanRepository> { ReceiptScanRepositoryImpl(get(), get()) }
+    single<ReceiptScanRepository> { ReceiptScanRepositoryImpl(get(), get(), get()) }
 }
 
 private const val REQUEST_TIMEOUT_MILLIS = 90_000L

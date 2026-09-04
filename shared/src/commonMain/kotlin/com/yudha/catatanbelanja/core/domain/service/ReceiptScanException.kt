@@ -15,7 +15,10 @@ class ReceiptScanException(
         /** No OpenRouter key was compiled in — `local.properties` still holds the placeholder. */
         const val MISSING_KEY = "SCAN_MISSING_KEY"
 
-        /** The request never landed: no network, a rejected key, a bad model slug, a timeout. */
+        /** The device has no working connection. Caught before the request, never after it. */
+        const val OFFLINE = "SCAN_OFFLINE"
+
+        /** The request never landed: a rejected key, a bad model slug, a timeout, a 500. */
         const val REQUEST_FAILED = "SCAN_REQUEST_FAILED"
 
         /** The reply arrived but was not the JSON that was asked for. */

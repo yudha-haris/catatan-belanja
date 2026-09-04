@@ -13,4 +13,11 @@ interface ReceiptScanRepository {
 
     /** False while no OpenRouter key has been compiled in, which hides the scan entry point. */
     fun isAvailable(): Boolean
+
+    /**
+     * Whether a scan could reach OpenRouter right now. Asked before the user is sent off to
+     * photograph anything — being told "you are offline" after taking the picture and waiting out
+     * a timeout is the same information delivered at the worst possible moment.
+     */
+    fun isOnline(): Boolean
 }

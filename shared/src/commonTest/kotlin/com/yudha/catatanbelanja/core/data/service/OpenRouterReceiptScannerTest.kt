@@ -1,6 +1,7 @@
 package com.yudha.catatanbelanja.core.data.service
 
 import com.yudha.catatanbelanja.core.common.IdGenerator
+import com.yudha.catatanbelanja.core.domain.service.NetworkMonitor
 import com.yudha.catatanbelanja.core.domain.service.ReceiptScanException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -125,6 +126,24 @@ class OpenRouterReceiptScannerTest {
     }
 
     @Test
+    fun `refuses before the request when the device is offline`() = runTest {
+        var calls = 0
+        val scanner = scannerOn(
+            engine = MockEngine {
+                calls += 1
+                respond(ByteReadChannel(""))
+            },
+            online = false,
+        )
+
+        val failure = assertFailsWith<ReceiptScanException> { scanner.scan(image) }
+
+        assertEquals(ReceiptScanException.OFFLINE, failure.code)
+        // The point of the check: no photo is uploaded and no timeout is waited out.
+        assertEquals(0, calls)
+    }
+
+    @Test
     fun `refuses before the request when no key has been pasted in`() = runTest {
         var calls = 0
         val scanner = scannerOn(
@@ -159,14 +178,20 @@ class OpenRouterReceiptScannerTest {
     private fun TestScope.scannerOn(
         engine: MockEngine,
         config: OpenRouterConfig = OpenRouterConfig(apiKey = "sk-or-test"),
+        online: Boolean = true,
     ): OpenRouterReceiptScanner = OpenRouterReceiptScanner(
         client = HttpClient(engine) {
             install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true; isLenient = true }) }
         },
         config = config,
+        networkMonitor = FixedNetworkMonitor(online),
         idGenerator = SequentialIdGenerator(),
         dispatcher = UnconfinedTestDispatcher(testScheduler),
     )
+}
+
+private class FixedNetworkMonitor(private val online: Boolean) : NetworkMonitor {
+    override fun isOnline(): Boolean = online
 }
 
 /** Ids that read as themselves in a failing assertion, unlike the random production ones. */

@@ -745,6 +745,7 @@
     <string name="scan_toast_saved">Trip saved</string>
     <string name="scan_toast_invalid_date">Check the date — write it as d/m/yyyy</string>
     <string name="scan_error_missing_key">No OpenRouter key in this build. Put openrouter.apiKey in local.properties and build again.</string>
+    <string name="scan_error_offline">No internet connection. Scanning a receipt needs one — connect and try again.</string>
     <string name="scan_error_request">Could not reach OpenRouter. Check the connection and try again.</string>
     <string name="scan_error_unreadable">The reply could not be read. Try the photo again.</string>
     <string name="scan_error_no_items">No items were found on that photo. Try a sharper shot with the whole receipt in frame.</string>

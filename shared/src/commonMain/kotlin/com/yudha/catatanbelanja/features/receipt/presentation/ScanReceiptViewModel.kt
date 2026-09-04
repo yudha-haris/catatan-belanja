@@ -57,6 +57,19 @@ class ScanReceiptViewModel(
         _state.update { it.copy(available = receiptScanRepository.isAvailable()) }
     }
 
+    /**
+     * The user asked for a photo. The connection is checked here rather than in the screen so the
+     * decision stays in one place — and the scanner checks again before the request, because the
+     * connection can drop while the camera is open.
+     */
+    fun requestPhoto() {
+        val effect = when (receiptScanRepository.isOnline()) {
+            true -> ScanReceiptEffect.OpenPhotoSource
+            false -> ScanReceiptEffect.Offline
+        }
+        viewModelScope.launch { _effects.send(effect) }
+    }
+
     /** [image] is the photo, already scaled and JPEG-encoded by the screen. */
     fun scan(image: ByteArray) {
         if (_state.value.scanState is UiState.Loading) return

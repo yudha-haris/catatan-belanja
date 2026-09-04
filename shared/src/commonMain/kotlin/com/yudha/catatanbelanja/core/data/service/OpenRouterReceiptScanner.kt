@@ -6,6 +6,7 @@ import com.yudha.catatanbelanja.core.common.capitalizeWords
 import com.yudha.catatanbelanja.core.common.normalized
 import com.yudha.catatanbelanja.core.domain.model.ReceiptScan
 import com.yudha.catatanbelanja.core.domain.model.ShoppingItem
+import com.yudha.catatanbelanja.core.domain.service.NetworkMonitor
 import com.yudha.catatanbelanja.core.domain.service.ReceiptScanException
 import com.yudha.catatanbelanja.core.domain.service.ReceiptScanner
 import io.ktor.client.HttpClient
@@ -39,6 +40,7 @@ import kotlinx.serialization.json.Json
 class OpenRouterReceiptScanner(
     private val client: HttpClient,
     private val config: OpenRouterConfig,
+    private val networkMonitor: NetworkMonitor,
     private val idGenerator: IdGenerator,
     private val dispatcher: CoroutineDispatcher,
 ) : ReceiptScanner {
@@ -52,6 +54,11 @@ class OpenRouterReceiptScanner(
     override suspend fun scan(image: ByteArray): ReceiptScan = withContext(dispatcher) {
         if (!config.isConfigured) {
             throw ReceiptScanException(MSG_MISSING_KEY, ReceiptScanException.MISSING_KEY)
+        }
+        // Checked again here, not only where the user pressed: they may have walked out of wifi
+        // range while the camera was open. Without it the failure is a 90-second timeout.
+        if (!networkMonitor.isOnline()) {
+            throw ReceiptScanException(MSG_OFFLINE, ReceiptScanException.OFFLINE)
         }
 
         val reply = requestReply(image)
@@ -196,6 +203,7 @@ class OpenRouterReceiptScanner(
         // Developer-facing, per Failure's contract — the screen picks its own wording off the
         // Failure code and never shows these.
         const val MSG_MISSING_KEY = "No OpenRouter API key: set openrouter.apiKey in local.properties"
+        const val MSG_OFFLINE = "The device has no working network connection"
         const val MSG_REQUEST_FAILED = "The OpenRouter request failed."
         const val MSG_EMPTY_REPLY = "OpenRouter returned an empty reply"
         const val MSG_UNREADABLE = "The reply was not the receipt JSON that was asked for."

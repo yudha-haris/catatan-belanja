@@ -52,6 +52,7 @@ fun ScanReceiptScreen(
     val invalidDateMessage = stringResource(R.string.scan_toast_invalid_date)
     val itemDeletedMessage = stringResource(R.string.common_item_toast_deleted)
     val unreadablePhotoMessage = stringResource(R.string.photo_toast_failed)
+    val offlineMessage = stringResource(R.string.scan_error_offline)
 
     var showSourceSheet by remember { mutableStateOf(false) }
     var editingRow by remember { mutableStateOf<ScannedItemRow?>(null) }
@@ -78,6 +79,8 @@ fun ScanReceiptScreen(
         viewModel.load()
         viewModel.effects.collect { effect ->
             when (effect) {
+                ScanReceiptEffect.OpenPhotoSource -> showSourceSheet = true
+                ScanReceiptEffect.Offline -> appUi.showToast(offlineMessage)
                 ScanReceiptEffect.ScanReady -> showSourceSheet = false
                 ScanReceiptEffect.InvalidDate -> appUi.showToast(invalidDateMessage)
                 ScanReceiptEffect.ItemDeleted -> appUi.showToast(itemDeletedMessage)
@@ -147,7 +150,7 @@ fun ScanReceiptScreen(
         if (!state.hasScan) {
             ScanReceiptIntro(
                 available = state.available,
-                onChoosePhoto = { showSourceSheet = true },
+                onChoosePhoto = viewModel::requestPhoto,
                 modifier = Modifier.fillMaxWidth(),
             )
             return@AppScaffold
@@ -164,7 +167,7 @@ fun ScanReceiptScreen(
             onItemClicked = { row -> editingRow = row },
             onRetake = {
                 viewModel.discard()
-                showSourceSheet = true
+                viewModel.requestPhoto()
             },
         )
     }
@@ -214,6 +217,7 @@ fun ScanReceiptScreen(
  */
 private fun Context.scanErrorMessage(code: String?): String = when (code) {
     ReceiptScanException.MISSING_KEY -> getString(R.string.scan_error_missing_key)
+    ReceiptScanException.OFFLINE -> getString(R.string.scan_error_offline)
     ReceiptScanException.REQUEST_FAILED -> getString(R.string.scan_error_request)
     ReceiptScanException.UNREADABLE_REPLY -> getString(R.string.scan_error_unreadable)
     ReceiptScanException.NO_ITEMS -> getString(R.string.scan_error_no_items)
