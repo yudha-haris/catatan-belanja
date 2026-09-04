@@ -1,8 +1,12 @@
 # Catatan Belanja
 
 Offline-first Kotlin Multiplatform app for planning a grocery trip, logging it, comparing
-prices between trips, and tracking what's left at home. Indonesian-first. No backend, no
-network calls.
+prices between trips, and tracking what's left at home. Indonesian-first. No backend.
+
+The one exception to "offline": **Riwayat > Scan struk** sends a photographed receipt to
+OpenRouter to be read back as line items (`docs/architecture.md` §6b). One screen, one explicit
+press, one destination. Nothing else in the app makes a network call — no analytics, no crash
+reporting, no sync — and nothing may start.
 
 Modules: `:shared` (KMP — domain, data, presentation/ViewModels) and `:androidApp`
 (Jetpack Compose UI). iOS targets compile; only the Android UI exists today.
@@ -34,3 +38,5 @@ only on repositories and use cases. No Koin `get()` outside modules. Guard claus
 classes. No `Snackbar`. No hardcoded user-facing strings, colors, `sp` sizes or font weights
 in UI. Only `.sq` files contain SQL, and every schema change ships a `<n>.sqm` migration beside them.
 `features.x` never imports `features.y` — anything two features share lives in `core`.
+`ReceiptScanner` is the only network call; the OpenRouter key lives in `local.properties` and
+reaches the graph through `initKoin`, never in source, the database or the backup document.

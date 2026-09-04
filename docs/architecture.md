@@ -22,6 +22,7 @@ binding: parallel implementers must match it exactly so the pieces compile toget
 | DB | SQLDelight 2.0.2 (`android-driver`, `native-driver`) |
 | Async | kotlinx-coroutines 1.9.0, `Flow` / `StateFlow` |
 | JSON | kotlinx-serialization-json 1.7.3 |
+| HTTP | Ktor 3.0.3 (`client-core` + `content-negotiation` shared, `okhttp` Android, `darwin` iOS) — **receipt scanning only**, see §6b |
 | Time | kotlinx-datetime 0.6.1 |
 | ViewModel | `org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.8.4` (KMP), in `shared` |
 | Navigation | `androidx.navigation:navigation-compose` 2.8.5 (Android only) |
@@ -110,7 +111,7 @@ core/
     IdGenerator.kt              interface IdGenerator / RandomIdGenerator
     Strings.kt                  String.normalized(), String.capitalizeWords()
   catalog/
-    CatalogData.kt              categories, units, defaultUnits, fallbackEmoji
+    CatalogData.kt              the *default* catalog (seed), units, defaultUnits, fallbackEmoji
     UnitConversion.kt           unit families and factors — mass and volume convert, counts do not
   domain/
     model/
@@ -122,9 +123,13 @@ core/
       StockItem.kt
       StockCheckEntry.kt
       StockCheckLog.kt
-      ItemCategory.kt
+      CatalogSeed.kt            the built-in catalog's shape, before it is given ids
+      CatalogCategory.kt        a stored category, with its items
+      CatalogItem.kt            a stored catalog item + its default unit
+      BrandPreset.kt
       AppSettings.kt
       ThemeFlavor.kt            enum PURPLE, GREEN, BLUE
+      AppLanguage.kt            enum SYSTEM, INDONESIAN, ENGLISH
       SessionSummary.kt
       ImportSummary.kt
       LastPurchase.kt
@@ -138,11 +143,16 @@ core/
       SettingsRepository.kt
       BackupRepository.kt
       TrendRepository.kt
+      CatalogRepository.kt
+      BrandRepository.kt
     service/
       FileSharer.kt             interface (expect/actual-free; Android impl in androidMain)
       ClipboardWriter.kt        interface
+      ReceiptScanner.kt         interface — the one thing that talks to the network (§6b)
+      ReceiptScanException.kt   its typed failures, carried through Failure.code
     usecase/
-      FindItemCategory.kt
+      FindItemCategory.kt       reads CatalogRepository.current
+      FindDefaultUnit.kt        the catalog's unit for a name, ditto
       BuildNameSuggestions.kt   shared by the live session and the list screen
       BuildNameChips.kt         name -> NameChipView, ditto
   data/
@@ -154,7 +164,13 @@ core/
       ShoppingListDao.kt
       SettingsDao.kt
       TrendDao.kt
+      CatalogDao.kt
+      BrandDao.kt
       Mappers.kt                row -> domain mapping helpers (internal)
+    service/
+      OpenRouterConfig.kt       API key + model slug, handed in by the platform entry point
+      OpenRouterReceiptScanner.kt  Ktor call + reply parsing
+      ReceiptScanDto.kt         @Serializable request/response family (one file, see §3 note)
     backup/
       BackupDto.kt              @Serializable DTOs (one file may hold the DTO family)
       BackupCodec.kt            encode/decode + lenient coercion
@@ -166,11 +182,13 @@ core/
       SettingsRepositoryImpl.kt
       BackupRepositoryImpl.kt
       TrendRepositoryImpl.kt
+      CatalogRepositoryImpl.kt  seeds the catalog, keeps `current` warm
+      BrandRepositoryImpl.kt
   di/
     CoreModule.kt               coreModule  — Clock, IdGenerator, IO dispatcher, shared use cases
     DataModule.kt               dataModule  — database, DAOs, repository bindings
     KoinInit.kt                 fun initKoin(platformModule: Module, appDeclaration: ...)
-                                lists coreModule, dataModule and all seven feature modules
+                                lists coreModule, dataModule and every feature module
 features/
   <feature>/
     di/
@@ -215,6 +233,12 @@ navigation/
   AppNavHost.kt
   MainShellScreen.kt            4 tabs + the floating pill tab bar
   ShellTabBar.kt
+locale/
+  AppLocale.kt                  redraws the tree in the chosen AppLanguage, no activity recreate
+photo/
+  ReceiptPhotoPicker.kt         the handle a screen holds (§7a)
+  RememberReceiptPhotoPicker.kt the composable that wires the two contracts up
+  ReceiptPhotoReader.kt         readReceiptPhoto(context, uri) — scale, rotate, JPEG
 format/
   MoneyFormat.kt                Int.toRupiah(), Int.toRupiahShort(), Int.toRupiahSigned()
   QtyFormat.kt                  Double.toQtyLabel()
@@ -311,6 +335,7 @@ data class ShoppingSession(
     val startedAt: Long,
     val endedAt: Long? = null,      // null => this is the active session
     val items: List<ShoppingItem> = emptyList(),
+    val receiptPhoto: String? = null,   // absolute path of the photographed paper receipt
 )
 
 /**
@@ -438,7 +463,7 @@ separate backup DTOs.
 
 ```kotlin
 object CatalogData {
-    val categories: List<ItemCategory>          // the 6 categories from the prototype
+    val categories: List<CatalogSeed>           // the 6 categories from the prototype
     val units: List<String> = listOf(
         "pcs", "kg", "gram", "liter", "ml", "bungkus", "ikat",
         "sisir", "buah", "botol", "kotak", "galon", "tabung",
@@ -446,18 +471,36 @@ object CatalogData {
     val defaultUnits: Map<String, String>       // keys are normalized() names
     const val FALLBACK_EMOJI = "🛍️"
 }
+
+fun CatalogData.defaultCatalog(): List<CatalogCategory>
 ```
 
 Copy the six categories, their emoji, their item lists, and the whole `UNIT_DEFAULT` map
 verbatim from the prototype's `CATS` / `UNITS` / `UNIT_DEFAULT`.
 
-`core/domain/usecase/FindItemCategory.kt`:
+**`categories` and `defaultUnits` are defaults, not the catalog.** The catalog the app reads is
+in the database and is editable from Pengaturan > Preset (§11.8). `defaultCatalog()` folds these
+two into rows — one `CatalogCategory` per seed, `defaultUnits` folded into each `CatalogItem`,
+ids slugged from the names (`"Minyak Goreng"` -> `"minyak-goreng"`) so two installs seed
+identically. `CatalogRepositoryImpl` writes it once, on first read.
+
+`units` and `FALLBACK_EMOJI` stay fixed — a unit is a measurement, not a preference.
+
+`core/domain/usecase/FindItemCategory.kt` / `FindDefaultUnit.kt`:
 ```kotlin
-class FindItemCategory {
-    operator fun invoke(name: String): ItemCategory?
+class FindItemCategory(catalogRepository: CatalogRepository) {
+    operator fun invoke(name: String): CatalogCategory?
     fun emojiFor(name: String): String
+    fun emojiOfCategory(name: String): String
+}
+
+class FindDefaultUnit(catalogRepository: CatalogRepository) {
+    operator fun invoke(name: String): String?     // null => the catalog has no opinion
 }
 ```
+
+Both read `CatalogRepository.current` rather than suspending: they run inside pure mappers, once
+per receipt row, over a catalog that is already in memory.
 
 ---
 
@@ -469,13 +512,20 @@ Delete the placeholder `Smoke.sq` — it exists only to prove the build.
 
 Files: `Session.sq`, `SessionItem.sq`, `ShoppingList.sq`, `ShoppingListItem.sq`,
 `StockItem.sq`, `StockCheckLog.sq`, `StockCheckLogItem.sq`, `StockReading.sq`, `StockRate.sq`,
-`Settings.sq`, `TrendSetting.sq`, `TrendQtyOverride.sq`.
+`Settings.sq`, `TrendSetting.sq`, `TrendQtyOverride.sq`,
+`CatalogCategory.sq`, `CatalogItem.sq`, `BrandPreset.sq`.
 
-**Schema version 4.** Every schema change ships a `<n>.sqm` migration next to the `.sq` files —
+**Schema version 6.** Every schema change ships a `<n>.sqm` migration next to the `.sq` files —
 SQLDelight derives `Schema.version` from how many there are, runs the `.sq` files on a fresh
 install and the migrations on an existing one. `1.sqm` adds the two shopping-list tables, `2.sqm` the two
-price-trend tables and `3.sqm` the two smart-stock tables, so an install that predates any of them
-upgrades instead of crashing on a missing table.
+price-trend tables, `3.sqm` the two smart-stock tables, `4.sqm` the three preset tables and
+`5.sqm` the receipt-photo table, so an install that predates any of them upgrades instead of
+crashing on a missing table.
+
+`4.sqm` seeds no rows: the built-in catalog is a Kotlin data structure and a migration cannot
+reach it. `CatalogRepositoryImpl` writes it on first read instead, guarded by a `catalog_seeded`
+row in `settings` — a flag rather than an empty-table check, because deleting every category is a
+decision and must not be undone on the next launch.
 
 **A migration is analysed against the migrations before it, never against the `.sq` files.** There
 are no generated `.db` schema files in this project, so SQLDelight replays `1.sqm`, `2.sqm`, … from
@@ -503,6 +553,13 @@ CREATE TABLE session (
     ended_at    INTEGER            -- NULL => active session
 );
 CREATE INDEX session_ended_at ON session(ended_at);
+
+-- SessionPhoto.sq -- no REFERENCES, per the rule above
+CREATE TABLE session_photo (
+    session_id TEXT NOT NULL PRIMARY KEY,
+    path       TEXT NOT NULL,      -- absolute path into ImageStore, not a content:// uri
+    added_at   INTEGER NOT NULL
+);
 
 -- SessionItem.sq
 CREATE TABLE session_item (
@@ -616,8 +673,15 @@ CREATE TABLE trend_qty_override (
 CREATE INDEX trend_qty_override_name_key ON trend_qty_override(name_key);
 ```
 
+The receipt photo is a table rather than a column on `session` for exactly the reason above: a
+`.sqm` cannot `ALTER` a table only `Session.sq` declares, so adding a column to `session` is not a
+migration this project can express. The row is all the database owns — the image file itself lives
+in `ImageStore` (§6a) and is deleted by `SessionRepositoryImpl`, which reads the path out before
+the DAO's transaction drops the row.
+
 `SessionDao` stands in for the missing cascade: `deleteSession`, `deleteAllSessions`, `deleteItem`
-and `updateItem` all drop the matching `trend_qty_override` rows inside their own transaction.
+and `updateItem` all drop the matching `trend_qty_override` rows inside their own transaction, and
+`deleteSession` / `deleteAllSessions` take the `session_photo` rows with them.
 `updateItem` is included deliberately — an edited receipt makes the correction a stale second
 opinion, and one the user cannot see from the edit sheet.
 
@@ -661,6 +725,63 @@ interface SessionRepository {
     suspend fun finishSession(sessionId: String, name: String): Resource<Unit>
     suspend fun cancelActiveSession(): Resource<Unit>
     suspend fun deleteSession(sessionId: String): Resource<Unit>
+
+    /** [bytes] arrive already scaled and JPEG-encoded — see §6a. Replaces any earlier photo. */
+    suspend fun attachReceiptPhoto(sessionId: String, bytes: ByteArray): Resource<Unit>
+    suspend fun removeReceiptPhoto(sessionId: String): Resource<Unit>
+    /** [image] is the receipt card the UI drew, as PNG bytes. */
+    suspend fun shareReceiptImage(sessionId: String, image: ByteArray): Resource<Unit>
+
+    /**
+     * A trip that already happened, read off a photographed receipt (§6b). Lands finished and
+     * dated [purchasedAt], never active — so it works while a live trip is running, and the
+     * history, the trends and the monthly totals place it where the paper says it belongs.
+     * Returns the new session id.
+     */
+    suspend fun importFinishedSession(
+        name: String,
+        store: String,
+        purchasedAt: Long,
+        items: List<ShoppingItem>,
+        photo: ByteArray?,
+    ): Resource<String>
+}
+
+interface ReceiptScanRepository {
+    suspend fun scan(image: ByteArray): Resource<ReceiptScan>
+    /** False while no OpenRouter key was compiled in, which hides the scan entry point. */
+    fun isAvailable(): Boolean
+}
+
+interface CatalogRepository {
+    /**
+     * The catalog as it stands, read without suspending — the emoji and default-unit lookups run
+     * inside pure mappers. Answers with `CatalogData.defaultCatalog()` until the first database
+     * read lands, which is the same catalog a fresh install is seeded with. The impl warms it at
+     * startup (its own `CoroutineScope`, bound in `dataModule`) and refreshes it after each write.
+     */
+    val current: List<CatalogCategory>
+
+    suspend fun getCatalog(): Resource<List<CatalogCategory>>
+    suspend fun addCategory(name: String, emoji: String): Resource<Unit>
+    suspend fun updateCategory(id: String, name: String, emoji: String): Resource<Unit>
+    suspend fun deleteCategory(id: String): Resource<Unit>          // takes its items with it
+    suspend fun addItem(categoryId: String, name: String, defaultUnit: String): Resource<Unit>
+    suspend fun updateItem(
+        id: String,
+        categoryId: String,
+        name: String,
+        defaultUnit: String,
+    ): Resource<Unit>                                               // a new categoryId moves it
+    suspend fun deleteItem(id: String): Resource<Unit>
+    suspend fun resetToDefaults(): Resource<Unit>
+}
+
+interface BrandRepository {
+    suspend fun getBrands(): Resource<List<BrandPreset>>
+    suspend fun addBrand(name: String): Resource<Unit>
+    suspend fun renameBrand(id: String, name: String): Resource<Unit>
+    suspend fun deleteBrand(id: String): Resource<Unit>
 }
 
 interface StockRepository {
@@ -691,6 +812,7 @@ interface SettingsRepository {
      */
     fun observeSettings(): Flow<AppSettings>
     suspend fun saveThemeFlavor(flavor: ThemeFlavor): Resource<Unit>
+    suspend fun saveLanguage(language: AppLanguage): Resource<Unit>
 }
 
 /**
@@ -724,9 +846,112 @@ interface BackupRepository {
 
 File picking is an Android UI concern (`ActivityResultContracts.OpenDocument`), so the picker
 itself lives in the settings screen; it hands the **text it read** to
-`SettingsViewModel.importFromText(raw)`. `FileSharer` / `ClipboardWriter` are interfaces in
-`core/domain/service`, implemented in `androidMain`, injected into `BackupRepositoryImpl`
-(never into a ViewModel — §4 of the rulebook).
+`SettingsViewModel.importFromText(raw)`. `FileSharer` / `ClipboardWriter` / `ImageStore` are
+interfaces in `core/domain/service`, implemented in `androidMain`, injected into
+`BackupRepositoryImpl` and `SessionRepositoryImpl` (never into a ViewModel — §4 of the rulebook).
+
+### 6a. Images — `ImageStore` and the receipt photo
+
+```kotlin
+interface ImageStore {
+    suspend fun save(name: String, bytes: ByteArray): String   // returns the absolute path
+    suspend fun delete(path: String)
+}
+
+interface FileSharer {
+    suspend fun shareText(fileName: String, mimeType: String, content: String)
+    suspend fun shareImage(fileName: String, mimeType: String, bytes: ByteArray)
+}
+```
+
+`AndroidImageStore` writes into **`filesDir/receipts/`**, not the cache: the cache is the system's
+to sweep whenever storage runs short, and a receipt that quietly disappeared is worse than one
+never taken. It stages each write beside the target and renames it into place, so a write that dies
+half way leaves the previous photo intact rather than a truncated JPEG. `AndroidFileSharer` stages
+what it is sharing in `cacheDir/backups/` or `cacheDir/shares/` and puts the payload on the
+intent's `ClipData` as well as `EXTRA_STREAM`, which is what makes the chooser draw a thumbnail.
+
+Three rules the photo is built to:
+
+1. **The picture is optional and always was.** Most trips will never have one. The empty state is a
+   flat card and one quiet button — never a warning, never a required step in the finish flow.
+2. **The bytes are scaled before they reach the repository.** A camera hands back an
+   eight-megabyte, 4000-pixel photograph; `readReceiptPhoto` (androidApp, §7a) caps the long edge
+   at 1600px and re-encodes as JPEG. The repository decides *where* the file lives, never how big.
+3. **A missing file is a state, not an error.** The path can stop resolving — a wipe, a restore
+   onto another phone, a user clearing app storage. `AppPhotoFrame` renders `photo_missing` and the
+   trip carries on; nothing raises a dialog over it.
+
+**The photo is deliberately not in the backup JSON.** The document is text the user can paste into
+another device, and a device-local absolute path means nothing there — it would decode as a
+receipt that will not open. `clearAllData` reads the paths out before it drops the rows, then
+deletes the files, so a wipe leaves nothing behind in app storage.
+
+### 6b. The receipt scanner — the app's only network call
+
+Everything else in this app is offline and stays offline. **One screen** (§11.9) sends **one
+thing** — a photographed receipt — to **one place**, and only when the user presses the button.
+No analytics, no crash reporting, no sync, no silent request anywhere else. `AndroidManifest.xml`
+declares `INTERNET` for this and nothing else.
+
+```kotlin
+interface ReceiptScanner {
+    /** [image] is already scaled and JPEG-encoded by the caller (§7a). */
+    suspend fun scan(image: ByteArray): ReceiptScan
+}
+
+data class ReceiptScan(
+    val store: String = "",
+    val purchasedAt: Long? = null,   // start of the printed day, or null when it would not read
+    val items: List<ShoppingItem> = emptyList(),
+)
+
+data class OpenRouterConfig(val apiKey: String = "", val model: String = DEFAULT_MODEL) {
+    val isConfigured: Boolean   // false while the key is blank or still the placeholder
+}
+```
+
+**The key never lives in source, in the database, or in the backup document.** It is read from
+`local.properties` — gitignored, already the file holding `sdk.dir` — by
+`androidApp/build.gradle.kts` into `BuildConfig`, and `CatatanBelanjaApp` passes it to
+`initKoin(platformModule, openRouter)` as an argument. `:shared` therefore contains no key and no
+default for one. A clone with no key still builds and still runs; `isAvailable()` is false, the
+scan screen shows why, and no request is ever fired.
+
+```properties
+# local.properties
+openrouter.apiKey=sk-or-v1-...
+openrouter.model=google/gemini-3.8-flash
+```
+
+**The model is a setting, not a constant.** Reading a receipt is transcription plus light
+structure, not reasoning, so a Flash-tier vision model does it as well as an expensive one at
+roughly Rp 50 a scan. The catalogue at openrouter.ai moves faster than releases do, so the slug is
+a `local.properties` line and a rebuild.
+
+**The request is deliberately plain.** One user message carrying the prompt and one
+`image_url` data URI, no `response_format`: structured-output support is not universal across the
+catalogue, and a request that only works on today's model would be a trap for the person who
+swaps the slug. The reply is tidied instead — `extractJsonObject` counts braces to lift the object
+out of a preamble or a ``` fence — and every DTO field is optional with a default, which is the
+§3 loose-typing exemption applied for a stronger reason than the backup file: this JSON is
+*generated*.
+
+**Failures are typed, because they need different sentences.** `ReceiptScanException.code`
+survives into `Failure.code`, and the screen switches on it:
+
+| Code | What the user is told |
+|---|---|
+| `SCAN_MISSING_KEY` | put a key in `local.properties` and build again |
+| `SCAN_REQUEST_FAILED` | could not reach OpenRouter — check the connection |
+| `SCAN_UNREADABLE_REPLY` | the reply could not be read; try the photo again |
+| `SCAN_NO_ITEMS` | nothing found on that photo; try a sharper shot |
+
+`ReceiptScanRepositoryImpl` is the one repository that does **not** use `resourceOf`: that wrapper
+flattens every throw into one message, which is exactly what this table exists to avoid.
+
+**Nothing the scanner returns is a fact.** Every field is a guess off thermal paper, so a scan
+lands on a review screen and reaches the database only when the user presses save.
 
 ### Backup JSON format (byte-compatible with the prototype)
 
@@ -844,6 +1069,8 @@ a `FontFamily`; fall back to `FontFamily.SansSerif` only if a weight is missing)
 | `label` | 14sp / W600 | chips / buttons |
 | `fieldLabel` | 12sp / W600 / inkSecondary | field labels |
 | `tiny` | 12sp / W400 / inkTertiary | `.tiny` |
+| `receiptBrand` | 11sp / W800 / +0.22em / inkTertiary | the till roll's tracked caps small print |
+| `receiptStamp` | 15sp / W800 / +0.16em | `AppStampBadge` |
 
 Shapes / spacing (`AppShapes`): `radius = 22.dp`, `radiusSmall = 14.dp`, `radiusItem = 18.dp`,
 `radiusSheet = 28.dp`, `pill = 999.dp`. Card shadow: ambient `ink @ 18%`, blur 30, y-offset 10
@@ -896,6 +1123,26 @@ SuccessBurst(visible)                                         // check ring + co
 
 ReceiptHeader(label, amount, footerLeft, footerRight, compact = false)
     // gradient heroStart -> heroEnd, zigzag bottom edge drawn with a Path in drawBehind
+ReceiptPaper(brandLabel, storeName, dateLabel, itemsHeaderLabel, amountHeaderLabel, lines,
+             itemCountLabel, totalLabel, totalAmount, stampLabel, serialLabel, footNote)
+    data class ReceiptPaperLine(emoji, name, detail, amount)
+    // The trip printed as a till roll: torn at both ends, dashed rules, a stamp beside the total
+    // and a barcode. Every string arrives finished — the component owns what a receipt looks like
+    // and nothing else, so no copy and no formatting lives in it.
+AppTornEdge(color, pointingDown = true)      // the 16dp-pitch torn paper edge, either way up
+AppDashedRule(color = colors.line)
+AppBarcode(seed, color)                       // decorative; bars are an LCG of `seed`, so stable
+AppStampBadge(text, color, rotationDegrees)   // the "LUNAS" rubber stamp
+AppPhotoFrame(path, contentDescription, missingLabel, contentScale, onClick)
+    // Decodes off the main thread, capped at 1280px on the long edge. A file that will not
+    // resolve renders `missingLabel` — see §6a rule 3 — and is never an error.
+ReceiptPhotoCard(title, hint, photoPath, addActionText, photoContentDescription,
+                 missingLabel, onAdd, onOpen)
+    // The one receipt-photo slot, shared by the live session and the finished trip.
+PhotoSourceBottomSheet(title, message, cameraText, galleryText, cancelText,
+                       canUseCamera, onCamera, onGallery, onDismiss)
+    // canUseCamera false DROPS the camera option rather than disabling it: a device without a
+    // camera is not a user who did something wrong, and a greyed-out button explains nothing.
 AppListRow(title, subtitle, trailing, trailingSub, trailingSubTone, emoji | leading,
            selected = false, dense = false, progress = null, onClick)
 AppBadge(text, tone)          enum class AppBadgeTone { Tint, Up, Down, Neutral }
@@ -942,6 +1189,42 @@ val LocalAppUi: ProvidableCompositionLocal<AppUiController>
 Screens call `LocalAppUi.current` inside a `LaunchedEffect` that collects the ViewModel's
 effect flow. **No `Snackbar` anywhere.**
 
+### 7a. Capturing a composable, and getting a photo in
+
+`androidApp/.../capture/` turns a composable into an image:
+
+```kotlin
+@Stable class AppCaptureController { suspend fun capturePng(): ByteArray? }
+@Composable fun rememberAppCaptureController(): AppCaptureController
+@Composable fun AppCaptureBox(controller, modifier, content)
+```
+
+`AppCaptureBox` records its content into a `GraphicsLayer` on every frame and then draws that
+layer, so **what the user sees and what gets shared are the same pixels by construction** — there
+is no second rendering path to drift. The layer records the node at the node's own size, so a
+receipt taller than the screen is captured whole even while clipped by a scroll container; what it
+cannot capture is content that was never composed, which is why `ReceiptShareSheet` previews inside
+`AppBottomSheet`'s plain `verticalScroll` and **never a `LazyColumn`**. From API 29 the layer hands
+back a hardware bitmap with no readable pixels, so `capturePng` copies to `ARGB_8888` first.
+
+`androidApp/.../photo/` is the way in:
+
+```kotlin
+@Stable class ReceiptPhotoPicker { val canTakePhoto: Boolean; fun takePhoto(); fun pickFromGallery() }
+@Composable fun rememberReceiptPhotoPicker(onPhoto: (ByteArray) -> Unit, onFailed: () -> Unit)
+internal suspend fun readReceiptPhoto(context, uri): ByteArray?
+```
+
+Same shape as the backup import (§6): the screen runs the `ActivityResultContracts` and hands the
+ViewModel the **bytes it read**, never a `Uri` the ViewModel would have to resolve. The camera goes
+through `TakePicture` into a `cacheDir/captures/` file exposed by the app's `FileProvider`, which
+means the app declares **no `CAMERA` permission** — declaring one would make the system demand a
+grant it does not otherwise need. The gallery uses `PickVisualMedia`, which needs no permission
+either. `readReceiptPhoto` applies the EXIF orientation either way — through `ImageDecoder` on API 28+,
+and by reading the tag and rotating by hand on the `BitmapFactory` path below it. It is not
+optional: a receipt photographed in portrait is very often stored sideways with a rotation tag,
+and a sideways receipt is an unreadable one.
+
 ---
 
 ## 8. Presentation rules
@@ -979,7 +1262,13 @@ sealed interface AppDestination {
     data class SessionDetail(val sessionId: String)       // "detail/{sessionId}"
     data class Compare(val aId: String, val bId: String)  // "compare/{aId}/{bId}"
     data object ShoppingList : AppDestination              // "list"
+    data object ScanReceipt : AppDestination               // "scan"
     data object Settings : AppDestination                 // "settings"
+    data object Preset : AppDestination                   // "preset"
+    data object PresetItems : AppDestination              // "preset/items"
+    data object PresetCategories : AppDestination         // "preset/categories"
+    data object PresetBrands : AppDestination             // "preset/brands"
+    data object PresetLanguage : AppDestination           // "preset/language"
     data object SpendingReport : AppDestination           // "report/spending"
     data object SpendingRanking : AppDestination          // "report/ranking"
     data class PriceTrend(val name: String?)              // "report/trend?trendName={trendName}"
@@ -998,16 +1287,29 @@ survives font scaling and taller navigation bars.
 `AppNavHost` uses `androidx.navigation.compose` with those routes. `MainShellScreen` owns the
 four tabs (Belanja / Riwayat / Stok / Ringkasan) — a `Scaffold` with the floating pill
 `ShellTabBar` and the four tab composables kept alive via saved state; the tab index is
-`rememberSaveable`. `LiveSession`, `SessionDetail`, `Compare`, `ShoppingList`, `Settings`,
-`SpendingReport`, `SpendingRanking` and `PriceTrend` are pushed routes with no tab bar.
+`rememberSaveable`. `LiveSession`, `SessionDetail`, `Compare`, `ShoppingList`, `ScanReceipt`, `Settings`,
+`SpendingReport`, `SpendingRanking`, `PriceTrend` and the five `Preset*` routes are pushed
+routes with no tab bar.
+
+`ScanReceipt` pops itself before pushing the trip it created: a spent draft must not sit behind
+the receipt it became, so backing out of that receipt lands on the history tab.
 
 ---
 
 ## 10. Strings
 
-All user-visible text goes in `androidApp/src/main/res/values/strings.xml` (Indonesian, the
-default locale) and `values-en/strings.xml` (English). Composables read them with
-`stringResource(R.string.key)`.
+All user-visible text goes in `androidApp/src/main/res/values/strings.xml` (English — the
+default, so an unsupported device language still lands somewhere readable) and
+`values-in/strings.xml` (Indonesian). `values-in`, not `values-id`: `in` is the resource
+qualifier Android uses for Indonesian. Composables read them with `stringResource(R.string.key)`.
+
+**Both sets must stay in step.** Neither is optional: the language is a setting (§11.8), so a key
+missing from `values-in` shows up as English inside an otherwise Indonesian screen rather than
+only on an English phone. `AppLocale` (`androidApp/.../locale/AppLocale.kt`) is what picks
+between them — it hands `LocalContext` and `LocalConfiguration` a `Configuration`-overridden
+context, so a language change re-letters the tree in place with no activity recreation. It also
+sets the process default `Locale`, which is what `DateFormat` reads: without that the copy would
+switch language and the dates beside it would not.
 
 - Key naming: `<area>_<thing>` snake_case — `home_greeting_morning`, `live_add_to_cart`,
   `history_compare_cta`, `stock_running_low`, `dashboard_top_spending`,
@@ -1092,6 +1394,14 @@ Actions: `load()`, `onNameChanged`, `pickName`, `pickCategory`, `pickBrand`, `pi
 `finishSession(name, addToStock, carryOverList)`, `requestCancel()`, `cancelSession()`,
 `leaveSession()`.
 
+**The receipt photo sits below the add card and above the cart** (`ReceiptPhotoCard`, §7). The
+paper receipt only exists once the last item has been rung up, so the offer belongs after the
+typing, not before it — nothing may come between the user and the field they opened the screen to
+use. Actions: `attachReceiptPhoto(bytes)`, `removeReceiptPhoto()`, both routed through the same
+`runAction` as the other edits so the session reloads and the card repaints. The two new
+`Message` values, `PHOTO_ATTACHED` / `PHOTO_REMOVED`, are the only feedback — attaching a photo is
+one deliberate tap, not something that deserves a dialog.
+
 `leaveSession()` is what the header arrow and the system `BackHandler` both call. **A session
 that bought nothing is deleted on the way out**: it was only ever an empty container, and leaving
 it behind put a trip the user never took on the home screen as "Sedang belanja". Silent — backing
@@ -1134,6 +1444,24 @@ goes false and the shortcut steps aside.
 `otherSessions: List<HistorySessionRowView>` for the "compare with" sheet. Actions: repeat
 session, delete session (confirmation), `updateItem(itemId, name, qtyText, unit, note, priceText)`
 — the sheet hands over its raw buffers, the ViewModel parses them.
+
+The detail screen also owns the receipt photo and the shareable receipt:
+
+- `ReceiptPhotoCard` sits between the two shortcuts and the item list, the same component the live
+  session uses. Tapping the photo opens `SessionDetailPhotoSheet` — full size, replace, remove —
+  and removing confirms first, because a photo cannot be got back once the paper is in the bin.
+  Actions: `attachReceiptPhoto(bytes)`, `removeReceiptPhoto()`.
+- The header's one action opens `ReceiptShareSheet`: the trip drawn as `ReceiptPaper` on the
+  flavour's hero gradient (`ReceiptShareCanvas`), previewed exactly as it will be sent, with one
+  button under it. The button captures the preview (§7a) and calls `shareReceiptImage(png)`.
+  The gradient margin is not decoration — a shared image lands in a chat as its own rectangle, and
+  a white receipt on a white chat background has no edges, so the torn ends, which are the whole
+  conceit, would be invisible.
+- Effects gained `PhotoAttached`, `PhotoRemoved` and `ReceiptShared`.
+
+The line details on the shared receipt are composed in the sheet from `SessionItemRow` with the
+`format/` helpers, exactly as `SessionDetailItemRow` already composes its subtitle: quantity and
+brand are a string join over data the ViewModel already emitted, not a derivation.
 
 **Compare** (pushed) — `CompareViewModel` + `BuildCompareResult` use case →
 `CompareResult(inBoth, onlyInA, onlyInB, totalA, totalB, delta, deltaPercent, upCount, downCount)`.
@@ -1303,8 +1631,8 @@ promise that the receipt is left alone.
 effects for share / clipboard / import results.
 Actions: `changeTheme`, `seedDemo`, `exportShare`, `exportCopy`, `importFromText(raw)`,
 `clearAll`.
-Screen: theme picker (3 cards), data rows (seed demo / export / import / clear all), a storage
-note, and the tips card. Import UX: a sheet offering "Pilih file JSON" (the screen runs
+Screen: theme picker (3 cards), the Preset row into §11.8, data rows (seed demo / export /
+import / clear all), a storage note, and the tips card. Import UX: a sheet offering "Pilih file JSON" (the screen runs
 `ActivityResultContracts.OpenDocument`, reads the bytes, passes the text to the ViewModel) or a
 paste field. Export UX: a sheet offering "Bagikan file" or "Salin ke clipboard".
 
@@ -1365,6 +1693,97 @@ open straight into the live session on cold start.
 
 ---
 
+### 11.8 `features/preset`
+
+**Pengaturan > Preset** — what the app offers you before you have typed anything. A hub route
+pushed from Settings, with four screens under it. The catalog it edits used to be the hardcoded
+`CatalogData`; it now lives in the database (§5) and `CatalogData` only seeds it.
+
+`PresetHubViewModel` / `PresetHubState`: `itemCount`, `categoryCount`, `brandCount`, `language`,
+`loadState`. One action, `load()` — re-run on every return from a sub-screen, which is what keeps
+the counts honest after an edit. `LoadPresetOverview` reads the catalog, the brands and the
+settings; first failure wins, because a row quietly reading "0 item" because its read failed says
+"you have nothing", which is worse than an error the user can retry.
+
+**Belanjaan** — `PresetItemsViewModel` / `PresetItemsState`: `categories`, `sections`, `query`,
+`totalCount`, `isSearchEmpty`, the editor fields (`isEditorOpen`, `editorItem`,
+`editorCategoryId`, `editorUnit`, `units`), `loadState`, `actionState`.
+Actions: `load()`, `onQueryChanged`, `openEditor(item?, categoryId)`, `closeEditor`,
+`pickEditorCategory`, `pickEditorUnit`, `saveItem(name)`, `deleteItem(id)`.
+Effects: `NameRequired`, `CategoryRequired`, `DuplicateName`, `Saved`, `Deleted`.
+`sections` is `categories` filtered by `query` with the empty categories dropped — the composable
+draws it as-is and filters nothing. Saving with a different `editorCategoryId` is how an item
+moves between categories; the sheet's unit menu carries "no default unit" as a real option, so a
+unit set by mistake can be taken off again.
+
+**Kategori** — `PresetCategoriesViewModel` / `PresetCategoriesState`: `categories`,
+`isEditorOpen`, `editorCategory`, `loadState`, `actionState`.
+Actions: `load()`, `openEditor(category?)`, `closeEditor`, `saveCategory(name, emoji)`,
+`deleteCategory(id)`, `resetToDefaults()`.
+Effects: `NameRequired`, `DuplicateName`, `Saved`, `Deleted`, `ResetToDefaults`.
+Deleting a category takes its items with it, so the confirmation quotes that count rather than
+asking a generic "are you sure". An empty emoji falls back rather than blocking the save —
+decoration must not stop a save.
+
+**Merk** — `PresetBrandsViewModel` / `PresetBrandsState`: `brands`, `isEditorOpen`,
+`editorBrand`, `loadState`, `actionState`.
+Actions: `load()`, `openEditor(brand?)`, `closeEditor`, `saveBrand(name)`, `deleteBrand(id)`.
+Effects: `NameRequired`, `DuplicateName`, `Saved`, `Deleted`.
+One flat, item-agnostic list. `FindBrandSuggestions(name, sessions, presets)` puts the per-item
+notes from past trips first — a brand this item was actually bought under beats one merely
+written down — capped at 6, then fills to 12 from the presets.
+
+**Bahasa** — `PresetLanguageViewModel` / `PresetLanguageState`: `language`, `loadState`.
+Actions: `load()`, `changeLanguage(language)`. Effect: `LanguageApplied`.
+Saving is all it does: `AppViewModel` observes the settings row and `AppLocale` (§10) re-letters
+the tree, so the screen re-draws under the user's finger — which is why the toast is read in the
+language just chosen. Re-tapping the active language still saves and still toasts, like the
+theme picker. Item, category and brand names are user data and are never translated; money stays
+in rupiah.
+
+**None of it is wiped by "Hapus semua data".** Presets are preferences, like the theme —
+`clearAllData` leaves `settings`, the catalog and the brands alone.
+
+### 11.9 `features/receipt`
+
+**Riwayat > Scan struk** — the drawer of old paper receipts, typed in by camera instead of by
+thumb. Reached from the history tab's header icon and from its empty state, which is exactly where
+someone with no history and a stack of receipts is standing.
+
+`ScanReceiptViewModel` / `ScanReceiptState`: `scanState`, `actionState`, `available`, `hasScan`,
+`scanId`, `store`, `purchasedAt`, `dateWasRead`, `rows`, `itemCount`, `total`, `canSave`.
+Actions: `load()`, `scan(image)`, `updateItem(...)`, `deleteItem(id)`,
+`save(name, store, dateText)`, `discard()`.
+Effects: `ScanReady`, `InvalidDate`, `ItemDeleted`, `Saved(sessionId)`.
+
+Two `UiState`s rather than one, per §3: reading the photo and writing the trip are separate flows
+on one screen, and a failed save must not read as a failed scan.
+
+**The draft is held in the ViewModel, not in the database.** `draft: List<ShoppingItem>` and the
+photo bytes are plain fields — a `ByteArray` has identity equality, so a state `copy()` holding
+one would look changed on every emission. Nothing is written until the save bar is pressed, so
+leaving the screen costs only the scan.
+
+**`hasScan`, never `rows.isEmpty()`.** A scan whose every row the user deleted is still a scan and
+must not drop the screen back to its "take a photo" state.
+
+**The three header fields are Compose-local text buffers**, keyed on `scanId` and read once, on
+save. The ViewModel parses `dateText` (`d/M/yyyy`, `-` and `.` also accepted) there rather than on
+every keystroke: reseeding a buffer from state as someone types fights them. A date that will not
+parse raises `InvalidDate` and writes nothing — it never silently files an old trip under today.
+
+**A receipt with no readable date falls back to today and says so** (`dateWasRead = false` draws
+the note under the field), rather than picking a date nobody chose.
+
+`BuildScannedRows` rebuilds the rows on every edit, because renaming an item changes the emoji the
+catalog files it under. Item editing reuses the finished-session sheet's shape: a scanned item is
+an ordinary item that arrived by camera.
+
+**`available == false` means the build carries no key** (§6b). The intro then shows what to do and
+offers no button — an entry point that can only fail is worse than a sentence explaining itself.
+
+---
+
 ## 12. Non-negotiables
 
 1. No mutable state outside a ViewModel except Compose-local `remember` for pure UI concerns.
@@ -1382,3 +1801,7 @@ open straight into the live session on cold start.
 10. `AppButton(enabled = false)` renders the disabled style; never fake it with an empty lambda.
 11. Only `.sq` files contain SQL.
 12. `features.x` never imports `features.y`.
+13. `ReceiptScanner` is the only thing in the app that touches the network, and it is reached
+    from one screen by an explicit press (§6b). No analytics, no crash reporting, no sync.
+14. The OpenRouter key lives in `local.properties` only. Never in source, the database, or the
+    backup document.
