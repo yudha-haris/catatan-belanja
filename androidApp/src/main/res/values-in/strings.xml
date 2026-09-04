@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Indonesian — the app's primary language. Must stay key-for-key in sync with values/strings.xml. -->
+    <string name="app_name">Catatan Belanja</string>
+
+    <!-- ============ common: shared labels, actions, feedback ============ -->
+    <string name="common_save">Simpan</string>
+    <string name="common_cancel">Batal</string>
+    <string name="common_delete">Hapus</string>
+    <string name="common_back">Kembali</string>
+    <string name="common_close">Tutup</string>
+    <string name="common_ok">Oke</string>
+    <string name="common_retry">Coba lagi</string>
+    <string name="common_saved">Tersimpan</string>
+    <string name="common_loading">Sebentar…</string>
+    <string name="common_empty_value">–</string>
+    <string name="common_currency_prefix">Rp</string>
+    <string name="common_optional">(opsional)</string>
+    <string name="common_total">Total</string>
+    <string name="common_qty_label">Jumlah</string>
+    <string name="common_unit_label">Satuan</string>
+    <string name="common_price_label">Harga</string>
+    <string name="common_item_name_label">Nama barang</string>
+    <string name="common_store_name_label">Nama toko</string>
+    <string name="common_store_name_placeholder">Superindo, pasar, warung…</string>
+    <string name="common_session_untitled_store">Belanja hari ini</string>
+    <string name="common_demo_added">Data contoh ditambahkan</string>
+    <string name="common_try_demo">Coba dengan data contoh</string>
+    <string name="common_separator_dot">·</string>
+    <string name="common_percent">%1$d%%</string>
+    <string name="common_percent_signed_up">+%1$d%%</string>
+    <string name="common_percent_signed_down">%1$d%%</string>
+
+    <!-- generic error surface: Failure.message is only shown as secondary detail -->
+    <string name="common_error_title">Ada yang tidak beres</string>
+    <string name="common_error_message">Coba lagi sebentar lagi ya.</string>
+
+    <!-- shell tabs -->
+    <string name="common_tab_shopping">Belanja</string>
+    <string name="common_tab_history">Riwayat</string>
+    <string name="common_tab_stock">Stok</string>
+    <string name="common_tab_dashboard">Ringkasan</string>
+
+    <!-- content descriptions for icon-only controls -->
+    <string name="common_cd_back">Kembali</string>
+    <string name="common_cd_settings">Pengaturan</string>
+    <string name="common_cd_add">Tambah</string>
+    <string name="common_cd_edit_store">Ubah toko</string>
+    <string name="common_cd_clear_text">Hapus teks</string>
+    <string name="common_cd_close">Tutup</string>
+    <string name="common_cd_search">Cari</string>
+
+    <!-- item edit sheet: opened from the live cart and from a saved session -->
+    <string name="common_item_qty_placeholder">–</string>
+    <string name="common_item_note_label">Merk / catatan</string>
+    <string name="common_item_note_placeholder">mis. Bimoli 2L, Indomie goreng</string>
+    <string name="common_item_qty_unit">%1$s %2$s</string>
+    <string name="common_item_unit_price">%1$s/%2$s</string>
+    <string name="common_item_toast_name_required">Nama tidak boleh kosong</string>
+    <string name="common_item_toast_saved">Tersimpan</string>
+    <string name="common_item_toast_deleted">Barang dihapus</string>
+
+    <plurals name="common_item_count">
+        <item quantity="one">%1$d barang</item>
+        <item quantity="other">%1$d barang</item>
+    </plurals>
+
+    <!-- ============ home: the Belanja tab / start screen ============ -->
+    <string name="home_greeting_morning">Selamat pagi</string>
+    <string name="home_greeting_noon">Selamat siang</string>
+    <string name="home_greeting_afternoon">Selamat sore</string>
+    <string name="home_greeting_evening">Selamat malam</string>
+    <string name="home_title">Halo!</string>
+    <string name="home_resume_title">Lanjutkan belanja</string>
+    <plurals name="home_resume_subtitle">
+        <item quantity="one">%1$s · %2$d barang · %3$s</item>
+        <item quantity="other">%1$s · %2$d barang · %3$s</item>
+    </plurals>
+    <string name="home_hero_label_new">Mau belanja apa hari ini?</string>
+    <string name="home_hero_label_again">Mulai sesi baru</string>
+    <string name="home_hero_title_new">Yuk, catat belanjaan</string>
+    <string name="home_hero_title_again">Belanja lagi</string>
+    <string name="home_start_button">Mulai belanja</string>
+    <string name="home_stat_month_label">Bulan ini</string>
+    <plurals name="home_stat_month_hint">
+        <item quantity="one">%1$d× belanja</item>
+        <item quantity="other">%1$d× belanja</item>
+    </plurals>
+    <string name="home_stat_average_label">Rata-rata</string>
+    <string name="home_stat_average_hint">per belanja</string>
+    <string name="home_recent_title">Terakhir</string>
+    <string name="home_recent_see_all">Semua</string>
+    <plurals name="home_recent_subtitle">
+        <item quantity="one">%1$s · %2$d barang</item>
+        <item quantity="other">%1$s · %2$d barang</item>
+    </plurals>
+    <string name="home_empty_message">Catat tiap barang, totalnya langsung terhitung — tidak perlu kalkulator dan spreadsheet lagi.</string>
+    <string name="home_toast_session_running">Selesaikan atau batalkan sesi yang sedang berjalan dulu</string>
+
+    <!-- rencana belanja berikutnya, diringkas di layar utama -->
+    <string name="home_list_title">Daftar belanja</string>
+    <string name="home_list_open">Lihat</string>
+    <string name="home_list_done">Semua kebeli 🎉</string>
+    <plurals name="home_list_remaining">
+        <item quantity="one">%1$d belum kebeli</item>
+        <item quantity="other">%1$d belum kebeli</item>
+    </plurals>
+    <string name="home_list_preview_more">%1$s +%2$d</string>
+    <string name="home_list_empty_title">Belum ada daftar</string>
+    <string name="home_list_empty_message">Catat dulu biar nggak ada yang kelupaan.</string>
+    <string name="home_list_empty_action">Buat daftar</string>
+
+    <!-- ============ live: the running shopping session ============ -->
+    <string name="live_header_subtitle">Sedang belanja · mulai %1$s</string>
+    <string name="live_receipt_label">Total sejauh ini</string>
+    <string name="live_receipt_last">terakhir: %1$s</string>
+    <string name="live_receipt_no_items">belum ada barang</string>
+    <string name="live_search_placeholder">Cari atau ketik barang…</string>
+    <string name="live_qty_placeholder">1</string>
+    <string name="live_detail_toggle">Jumlah &amp; merk</string>
+    <string name="live_brand_label">Merk</string>
+    <string name="live_brand_placeholder">mis. Bimoli, Indomie goreng</string>
+    <string name="live_price_placeholder">0</string>
+    <string name="live_add_to_cart">Tambah ke keranjang</string>
+    <string name="live_cart_title">Keranjang</string>
+    <string name="live_cart_hint">ketuk barang untuk ubah / tambah catatan</string>
+    <string name="live_cart_empty">Keranjang masih kosong. Ketuk barang di atas atau ketik namanya.</string>
+    <string name="live_suggest_frequent">Sering dibeli</string>
+    <string name="live_suggest_category">Kategori</string>
+    <string name="live_new_item_chip">\"%1$s\" barang baru</string>
+    <string name="live_last_price">Terakhir %1$s</string>
+    <string name="live_last_price_qty">untuk %1$s %2$s</string>
+    <string name="live_last_price_meta">%1$s · %2$s</string>
+    <string name="live_last_price_use">Pakai</string>
+    <string name="live_finish">Selesai</string>
+    <string name="live_store_sheet_title">Nama toko</string>
+    <string name="live_toast_need_name">Isi nama barang dulu ya</string>
+    <string name="live_toast_need_price">Berapa harganya?</string>
+    <string name="live_toast_item_added">✓ %1$s %2$s</string>
+    <string name="live_toast_item_added_with_note">✓ %1$s %2$s %3$s</string>
+    <string name="live_toast_cart_empty">Keranjang masih kosong</string>
+    <string name="live_toast_cancelled">Sesi dibatalkan</string>
+    <string name="live_toast_saved">Catatan tersimpan</string>
+    <plurals name="live_toast_saved_with_stock">
+        <item quantity="one">Tersimpan · %1$d barang masuk stok</item>
+        <item quantity="other">Tersimpan · %1$d barang masuk stok</item>
+    </plurals>
+    <string name="live_toast_repeat_hint">Daftar sebelumnya ada di \"Sering dibeli\"</string>
+
+    <!-- finish sheet -->
+    <string name="live_finish_sheet_title">Selesai belanja</string>
+    <string name="live_finish_receipt_label">Total dibayar</string>
+    <string name="live_finish_name_label">Nama sesi</string>
+    <string name="live_finish_default_name">Belanja %1$s</string>
+    <string name="live_finish_add_to_stock_title">Tambahkan ke stok di rumah</string>
+    <string name="live_finish_confirm">Simpan catatan</string>
+    <string name="live_finish_continue">Lanjut belanja</string>
+    <plurals name="live_finish_add_to_stock_subtitle">
+        <item quantity="one">%1$d barang yang ada jumlahnya</item>
+        <item quantity="other">%1$d barang yang ada jumlahnya</item>
+    </plurals>
+
+    <!-- cancel sheet -->
+    <string name="live_cancel_sheet_title">Batalkan belanja?</string>
+    <string name="live_cancel_confirm">Ya, batalkan</string>
+    <plurals name="live_cancel_sheet_message">
+        <item quantity="one">%1$d barang di keranjang akan dibuang dan tidak disimpan.</item>
+        <item quantity="other">%1$d barang di keranjang akan dibuang dan tidak disimpan.</item>
+    </plurals>
+
+    <!-- daftar belanja, dicoret sendiri saat barangnya masuk keranjang -->
+    <string name="live_list_title">Daftar kamu</string>
+    <string name="live_list_progress">%1$d/%2$d</string>
+    <string name="live_list_hint">Tap buat isi harganya</string>
+    <string name="live_list_more">+%1$d lagi</string>
+    <string name="live_list_less">Tutup</string>
+    <string name="live_list_done">Daftar selesai! 🎉</string>
+    <string name="live_toast_list_complete">Daftar kelar semua — mantap 🎉</string>
+    <string name="live_finish_carry_over_title">Simpan sisanya</string>
+    <plurals name="live_finish_carry_over_subtitle">
+        <item quantity="one">%1$d barang belum kebeli — jadikan daftar berikutnya</item>
+        <item quantity="other">%1$d barang belum kebeli — jadikan daftar berikutnya</item>
+    </plurals>
+    <plurals name="live_toast_saved_with_carry">
+        <item quantity="one">Tersimpan · %1$d sisa jadi daftar baru</item>
+        <item quantity="other">Tersimpan · %1$d sisa jadi daftar baru</item>
+    </plurals>
+
+    <!-- ============ list: layar daftar belanja ============ -->
+    <string name="list_title">Daftar belanja</string>
+    <string name="list_subtitle_empty">Masih kosong</string>
+    <string name="list_subtitle_progress">%1$d dari %2$d sudah kebeli</string>
+    <string name="list_progress_count">%1$d/%2$d</string>
+    <string name="list_progress_done">Semua kebeli! 🎉</string>
+    <plurals name="list_progress_remaining">
+        <item quantity="one">Tinggal %1$d lagi</item>
+        <item quantity="other">Tinggal %1$d lagi</item>
+    </plurals>
+    <string name="list_add_placeholder">Tulis barangnya…</string>
+    <string name="list_add_action">Tambah ke daftar</string>
+    <string name="list_new_item_chip">Tambah \"%1$s\"</string>
+    <string name="list_quick_add_title">Tinggal tap</string>
+    <string name="list_section_title">Yang mau dibeli</string>
+    <string name="list_empty_title">Belum ada daftar</string>
+    <string name="list_empty_message">Tulis dulu apa yang mau dibeli, nanti tinggal dicoret di toko.</string>
+    <string name="list_empty_action">Buat daftar</string>
+    <string name="list_source_sheet_title">Buat daftar</string>
+    <string name="list_source_blank">Daftar kosong</string>
+    <string name="list_source_blank_subtitle">Tulis sendiri</string>
+    <string name="list_source_last_session">Sama kayak belanja terakhir</string>
+    <string name="list_source_low_stock">Stok yang menipis</string>
+    <string name="list_source_template">Template</string>
+    <plurals name="list_source_items">
+        <item quantity="one">%1$d barang</item>
+        <item quantity="other">%1$d barang</item>
+    </plurals>
+    <string name="list_menu_cd">Opsi daftar</string>
+    <string name="list_menu_title">Daftar ini</string>
+    <string name="list_menu_save_template">Simpan jadi template</string>
+    <string name="list_menu_delete">Hapus daftar</string>
+    <string name="list_template_sheet_title">Simpan jadi template</string>
+    <string name="list_template_name_label">Nama template</string>
+    <string name="list_template_name_placeholder">Belanja mingguan</string>
+    <string name="list_template_save">Simpan template</string>
+    <string name="list_delete_title">Hapus daftar ini?</string>
+    <string name="list_delete_message">Isinya hilang permanen. Riwayat belanja nggak ikut terhapus.</string>
+    <string name="list_delete_confirm">Hapus</string>
+    <string name="list_item_check_cd">Tandai %1$s sudah dibeli</string>
+    <string name="list_item_uncheck_cd">Tandai %1$s belum dibeli</string>
+    <string name="list_item_remove_cd">Hapus %1$s dari daftar</string>
+    <string name="list_toast_started_blank">Daftar kosong siap diisi</string>
+    <plurals name="list_toast_started">
+        <item quantity="one">%1$d barang masuk daftar</item>
+        <item quantity="other">%1$d barang masuk daftar</item>
+    </plurals>
+    <string name="list_toast_already">Udah ada di daftar</string>
+    <string name="list_toast_need_name">Tulis dulu nama barangnya</string>
+    <string name="list_toast_complete">Semua kebeli! 🎉</string>
+    <string name="list_template_delete_cd">Hapus template %1$s</string>
+    <string name="list_template_delete_title">Hapus \"%1$s\"?</string>
+    <string name="list_template_delete_message">Yang hilang cuma templatenya. Daftar yang sudah dibuat dari situ tetap ada.</string>
+    <string name="list_toast_template_deleted">Template dihapus</string>
+    <string name="list_toast_template_saved">Template tersimpan</string>
+    <string name="list_toast_deleted">Daftar dihapus</string>
+
+    <!-- ============ history: the Riwayat tab ============ -->
+    <string name="history_title">Riwayat</string>
+    <string name="history_empty_title">Belum ada riwayat</string>
+    <string name="history_empty_message">Setiap sesi belanja yang selesai akan muncul di sini dan bisa dibandingkan.</string>
+    <string name="history_compare_cta">Bandingkan</string>
+    <string name="history_compare_cancel">Batal</string>
+    <string name="history_compare_hint">Pilih 2 sesi untuk dibandingkan (%1$d/2)</string>
+    <string name="history_compare_quick">2 terakhir</string>
+    <string name="history_compare_selected">2 sesi dipilih</string>
+    <string name="history_compare_ready">Siap dibandingkan</string>
+    <string name="history_compare_run">Bandingkan</string>
+    <plurals name="history_row_subtitle">
+        <item quantity="one">%1$s · %2$d barang</item>
+        <item quantity="other">%1$s · %2$d barang</item>
+    </plurals>
+    <plurals name="history_row_subtitle_with_store">
+        <item quantity="one">%1$s · %2$d barang · %3$s</item>
+        <item quantity="other">%1$s · %2$d barang · %3$s</item>
+    </plurals>
+    <plurals name="history_session_count">
+        <item quantity="one">%1$d sesi belanja</item>
+        <item quantity="other">%1$d sesi belanja</item>
+    </plurals>
+
+    <!-- ============ detail: one finished session ============ -->
+    <string name="detail_receipt_label">Total belanja</string>
+    <string name="detail_subtitle_with_store">%1$s · %2$s</string>
+    <string name="detail_vs_previous">%1$s vs sebelumnya</string>
+    <string name="detail_compare_button">Bandingkan</string>
+    <string name="detail_repeat_button">Belanja lagi</string>
+    <string name="detail_repeat_button_long">Belanja lagi dengan daftar ini</string>
+    <string name="detail_items_title">Barang</string>
+    <string name="detail_items_hint_diff">panah = beda dari sesi sebelumnya</string>
+    <string name="detail_items_hint_edit">ketuk untuk ubah</string>
+    <string name="detail_delete_button">Hapus catatan ini</string>
+    <string name="detail_delete_sheet_title">Hapus catatan ini?</string>
+    <string name="detail_delete_sheet_message">Catatan yang dihapus tidak bisa dikembalikan.</string>
+    <string name="detail_toast_deleted">Catatan dihapus</string>
+    <string name="detail_compare_with_title">Bandingkan dengan…</string>
+    <string name="detail_toast_session_running">Selesaikan sesi yang sedang berjalan dulu</string>
+
+    <!-- ============ compare: two sessions side by side ============ -->
+    <string name="compare_title">Perbandingan</string>
+    <plurals name="compare_subtitle">
+        <item quantity="one">%1$d barang sama · %2$d berbeda</item>
+        <item quantity="other">%1$d barang sama · %2$d berbeda</item>
+    </plurals>
+    <string name="compare_side_a">A · %1$s</string>
+    <string name="compare_side_b">B · %1$s</string>
+    <string name="compare_delta_label">Selisih total (B − A)</string>
+    <string name="compare_delta_percent_up">(+%1$d%%)</string>
+    <string name="compare_delta_percent_down">(%1$d%%)</string>
+    <string name="compare_badge_up">%1$d naik</string>
+    <string name="compare_badge_down">%1$d turun</string>
+    <string name="compare_in_both">Ada di keduanya</string>
+    <string name="compare_in_both_hint">urut selisih terbesar</string>
+    <string name="compare_only_a">Hanya di A</string>
+    <string name="compare_only_b">Hanya di B</string>
+    <string name="compare_same">sama</string>
+
+    <!-- ============ stock: the Stok tab ============ -->
+    <string name="stock_title">Stok di rumah</string>
+    <string name="stock_subtitle_low">%1$d perlu dibeli</string>
+    <string name="stock_empty_title">Belum ada stok tercatat</string>
+    <string name="stock_empty_message">Catat sisa beras, minyak, sabun, dll. Setiap selesai belanja, barang yang ada jumlahnya otomatis masuk ke stok.</string>
+    <string name="stock_empty_action">Tambah barang</string>
+    <string name="stock_section_low">Perlu dibeli</string>
+    <string name="stock_section_ok">Masih ada</string>
+    <string name="stock_section_ok_hint">ketuk untuk ubah jumlah</string>
+    <string name="stock_row_remind">ingatkan bila ≤ %1$s %2$s</string>
+    <string name="stock_row_updated">diperbarui %1$s</string>
+    <string name="stock_out">Habis</string>
+    <string name="stock_running_low">hampir habis</string>
+    <string name="stock_need_buy">perlu beli</string>
+
+    <!-- add / edit stock sheet -->
+    <string name="stock_sheet_add_title">Tambah stok</string>
+    <string name="stock_sheet_name_placeholder">Beras, Minyak Goreng…</string>
+    <string name="stock_sheet_qty_label">Sisa sekarang</string>
+    <string name="stock_sheet_qty_placeholder">0</string>
+    <string name="stock_sheet_min_label">Ingatkan kalau sisa ≤</string>
+    <string name="stock_sheet_min_placeholder">mis. 1</string>
+    <string name="stock_sheet_mark_empty">Habis</string>
+    <string name="stock_toast_name_required">Isi nama barang</string>
+    <string name="stock_toast_saved">Stok tersimpan</string>
+    <string name="stock_toast_deleted">Dihapus dari stok</string>
+    <string name="stock_toast_marked_empty">%1$s ditandai habis</string>
+
+    <!-- end-of-month stock check -->
+    <string name="stock_check_cta">Cek sisa stok akhir bulan</string>
+    <string name="stock_check_cta_hint">Isi sisa semua barang sekaligus, tersimpan sebagai catatan bulanan</string>
+    <string name="stock_check_sheet_title">Cek sisa stok</string>
+    <string name="stock_check_sheet_subtitle">%1$s · isi sisa masing-masing barang, 0 kalau habis.</string>
+    <string name="stock_check_previous">sebelumnya %1$s %2$s</string>
+    <string name="stock_check_save">Simpan cek stok</string>
+    <string name="stock_check_toast_saved">Cek stok %1$s tersimpan</string>
+
+    <!-- stock check history -->
+    <string name="stock_logs_title">Riwayat cek stok</string>
+    <plurals name="stock_log_subtitle">
+        <item quantity="one">%1$s · %2$d barang · %3$d habis</item>
+        <item quantity="other">%1$s · %2$d barang · %3$d habis</item>
+    </plurals>
+    <string name="stock_log_sheet_title">Stok %1$s</string>
+    <string name="stock_log_sheet_checked">Dicek %1$s</string>
+    <string name="stock_log_sheet_checked_with_previous">Dicek %1$s · pemakaian dihitung dari sisa %2$s + pembelian</string>
+    <string name="stock_log_bought">beli</string>
+    <string name="stock_log_remaining">sisa</string>
+    <string name="stock_log_used">pakai ≈ %1$s</string>
+    <string name="stock_log_delete">Hapus catatan ini</string>
+    <string name="stock_log_toast_deleted">Catatan cek stok dihapus</string>
+
+    <!-- ============ dashboard: the Ringkasan tab ============ -->
+    <string name="dashboard_title">Ringkasan</string>
+    <string name="dashboard_empty_title">Belum ada data</string>
+    <string name="dashboard_empty_message">Selesaikan satu sesi belanja dulu, nanti ringkasannya muncul di sini.</string>
+    <string name="dashboard_stat_month">Bulan ini</string>
+    <string name="dashboard_vs_last_month">%1$d%% vs bulan lalu</string>
+    <string name="dashboard_no_comparison">belum ada pembanding</string>
+    <string name="dashboard_stat_sessions">Belanja bulan ini</string>
+    <string name="dashboard_stat_sessions_value">%1$d×</string>
+    <string name="dashboard_stat_average">rata-rata %1$s</string>
+    <string name="dashboard_recent_title">8 belanja terakhir</string>
+    <string name="dashboard_recent_hint">ketuk batang</string>
+    <string name="dashboard_top_spending">Pengeluaran terbesar</string>
+    <string name="dashboard_scope_month">Bulan ini</string>
+    <string name="dashboard_scope_all">Semua</string>
+    <string name="dashboard_rank_hint">%1$d× dibeli · %2$d%% dari total</string>
+    <string name="dashboard_trend_title">Tren harga</string>
+    <string name="dashboard_trend_summary">%1$d data · dari %2$s ke %3$s</string>
+    <string name="dashboard_trend_percent_up">(+%1$d%%)</string>
+    <string name="dashboard_trend_percent_down">(%1$d%%)</string>
+
+    <!-- ============ settings ============ -->
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_subtitle">Sesuaikan biar nyaman dipakai</string>
+    <string name="settings_theme_title">Warna tema</string>
+    <string name="settings_theme_purple">Ungu</string>
+    <string name="settings_theme_green">Hijau</string>
+    <string name="settings_theme_blue">Biru</string>
+    <string name="settings_theme_toast_purple">Tema ungu 💜</string>
+    <string name="settings_theme_toast_green">Tema hijau 💚</string>
+    <string name="settings_theme_toast_blue">Tema biru 💙</string>
+
+    <string name="settings_data_title">Data</string>
+    <string name="settings_seed_demo_title">Isi data contoh</string>
+    <string name="settings_seed_demo_subtitle">Tambah beberapa sesi belanja contoh untuk mencoba fitur bandingkan &amp; ringkasan</string>
+
+    <string name="settings_export_title">Ekspor data (JSON)</string>
+    <string name="settings_export_subtitle">Untuk backup atau dipindah ke perangkat lain</string>
+    <string name="settings_export_sheet_title">Ekspor data</string>
+    <string name="settings_export_sheet_message">Simpan cadangan datamu atau pindahkan ke perangkat lain.</string>
+    <string name="settings_export_share">Bagikan file</string>
+    <string name="settings_export_copy">Salin ke clipboard</string>
+    <string name="settings_export_toast_copied">Data disalin ke clipboard</string>
+
+    <string name="settings_import_title">Impor data (JSON)</string>
+    <string name="settings_import_subtitle">Pulihkan dari backup — data digabung, tidak menimpa</string>
+    <string name="settings_import_sheet_title">Impor data</string>
+    <string name="settings_import_sheet_message">Pilih file hasil ekspor, atau tempel JSON-nya di bawah.</string>
+    <string name="settings_import_pick_file">Pilih file JSON</string>
+    <string name="settings_import_paste_label">Tempel data</string>
+    <string name="settings_import_paste_placeholder">{\"sessions\":[…]}</string>
+    <string name="settings_import_confirm">Gabungkan data</string>
+    <string name="settings_import_toast_invalid">Format JSON tidak valid</string>
+    <string name="settings_import_toast_none">Tidak ada sesi baru</string>
+    <string name="settings_import_toast_file_unreadable">File tidak bisa dibaca</string>
+    <plurals name="settings_import_toast_lists">
+        <item quantity="one">%1$d daftar belanja ditambahkan</item>
+        <item quantity="other">%1$d daftar belanja ditambahkan</item>
+    </plurals>
+    <plurals name="settings_import_toast_merged">
+        <item quantity="one">%1$d sesi digabungkan</item>
+        <item quantity="other">%1$d sesi digabungkan</item>
+    </plurals>
+
+    <string name="settings_clear_title">Hapus semua data</string>
+    <string name="settings_clear_subtitle">%1$s · %2$s</string>
+    <plurals name="settings_clear_subtitle_sessions">
+        <item quantity="one">%1$d sesi</item>
+        <item quantity="other">%1$d sesi</item>
+    </plurals>
+    <plurals name="settings_clear_subtitle_stock">
+        <item quantity="one">%1$d stok tersimpan</item>
+        <item quantity="other">%1$d stok tersimpan</item>
+    </plurals>
+    <string name="settings_clear_sheet_title">Hapus semua data?</string>
+    <string name="settings_clear_confirm">Hapus semua</string>
+    <string name="settings_clear_toast">Semua data dihapus</string>
+    <plurals name="settings_clear_sheet_message">
+        <item quantity="one">Semua %1$d sesi dan sesi yang sedang berjalan akan dihapus.</item>
+        <item quantity="other">Semua %1$d sesi dan sesi yang sedang berjalan akan dihapus.</item>
+    </plurals>
+
+    <string name="settings_storage_title">Data tersimpan di perangkat ini</string>
+    <string name="settings_storage_message">Semuanya offline, tidak ada yang dikirim ke internet. Pakai Ekspor data untuk membuat cadangan.</string>
+
+    <string name="settings_tips_title">Tips cepat</string>
+    <string name="settings_tip_pick_frequent">Ketuk nama barang di daftar \"Sering dibeli\" lalu langsung ketik harga.</string>
+    <string name="settings_tip_qty_optional">Jumlah boleh dikosongkan, isi kalau mau lihat harga per kg/liter.</string>
+    <string name="settings_tip_note_later">Merek atau ukuran bisa ditambah belakangan lewat catatan.</string>
+    <string name="settings_tip_compare">Sesi yang selesai bisa dibandingkan satu sama lain di Riwayat.</string>
+    <string name="settings_tip_stock_check">Di menu Stok, ketuk \"Cek sisa stok akhir bulan\" untuk mencatat sisa semua barang sekaligus.</string>
+
+    <string name="settings_footer">Catatan Belanja</string>
+    <plurals name="common_tab_stock_badge">
+        <item quantity="one">%1$d barang perlu dibeli</item>
+        <item quantity="other">%1$d barang perlu dibeli</item>
+    </plurals>
+</resources>
