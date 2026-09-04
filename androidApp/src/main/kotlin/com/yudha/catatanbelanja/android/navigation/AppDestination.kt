@@ -6,6 +6,7 @@ private const val LIVE_SESSION_PATH = "live"
 private const val SESSION_DETAIL_PATH = "detail"
 private const val COMPARE_PATH = "compare"
 private const val PRICE_TREND_PATH = "report/trend"
+private const val PRESET_PATH = "preset"
 
 /**
  * Every route in the app. Instances build the concrete [route] to navigate to; [Pattern] holds
@@ -22,6 +23,28 @@ sealed interface AppDestination {
 
     data object Settings : AppDestination {
         override val route: String = Pattern.SETTINGS
+    }
+
+    /** Pengaturan > Preset: the hub the four preset screens hang off. */
+    data object Preset : AppDestination {
+        override val route: String = Pattern.PRESET
+    }
+
+    /** The catalog's items — "belanjaan". */
+    data object PresetItems : AppDestination {
+        override val route: String = Pattern.PRESET_ITEMS
+    }
+
+    data object PresetCategories : AppDestination {
+        override val route: String = Pattern.PRESET_CATEGORIES
+    }
+
+    data object PresetBrands : AppDestination {
+        override val route: String = Pattern.PRESET_BRANDS
+    }
+
+    data object PresetLanguage : AppDestination {
+        override val route: String = Pattern.PRESET_LANGUAGE
     }
 
     /** Daftar belanja — the plan for the next trip. */
@@ -74,6 +97,11 @@ sealed interface AppDestination {
     object Pattern {
         const val SHELL = "shell"
         const val SETTINGS = "settings"
+        const val PRESET = PRESET_PATH
+        const val PRESET_ITEMS = "$PRESET_PATH/items"
+        const val PRESET_CATEGORIES = "$PRESET_PATH/categories"
+        const val PRESET_BRANDS = "$PRESET_PATH/brands"
+        const val PRESET_LANGUAGE = "$PRESET_PATH/language"
         const val SHOPPING_LIST = "list"
         const val LIVE_SESSION = "$LIVE_SESSION_PATH?${Arg.REPEAT_FROM}={${Arg.REPEAT_FROM}}"
         const val SESSION_DETAIL = "$SESSION_DETAIL_PATH/{${Arg.SESSION_ID}}"

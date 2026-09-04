@@ -14,11 +14,16 @@ import com.yudha.catatanbelanja.core.domain.model.ShoppingItem
 import com.yudha.catatanbelanja.core.domain.model.ShoppingList
 import com.yudha.catatanbelanja.core.domain.model.ShoppingSession
 import com.yudha.catatanbelanja.core.domain.model.StockItem
+import com.yudha.catatanbelanja.core.domain.model.BrandPreset
+import com.yudha.catatanbelanja.core.domain.model.NameChipView
+import com.yudha.catatanbelanja.core.domain.repository.BrandRepository
+import com.yudha.catatanbelanja.core.domain.repository.CatalogRepository
 import com.yudha.catatanbelanja.core.domain.repository.SessionRepository
 import com.yudha.catatanbelanja.core.domain.repository.ShoppingListRepository
 import com.yudha.catatanbelanja.core.domain.repository.StockRepository
 import com.yudha.catatanbelanja.core.domain.usecase.BuildNameChips
 import com.yudha.catatanbelanja.core.domain.usecase.BuildNameSuggestions
+import com.yudha.catatanbelanja.core.domain.usecase.FindDefaultUnit
 import com.yudha.catatanbelanja.features.shopping.domain.usecase.BuildSessionItemViews
 import com.yudha.catatanbelanja.features.shopping.domain.usecase.CreateShoppingItem
 import com.yudha.catatanbelanja.features.shopping.domain.usecase.CurrentTime
@@ -37,10 +42,13 @@ class LiveSessionViewModel(
     private val sessionRepository: SessionRepository,
     private val stockRepository: StockRepository,
     private val shoppingListRepository: ShoppingListRepository,
+    private val catalogRepository: CatalogRepository,
+    private val brandRepository: BrandRepository,
     private val buildNameSuggestions: BuildNameSuggestions,
     private val buildNameChips: BuildNameChips,
     private val findLastPurchase: FindLastPurchase,
     private val findBrandSuggestions: FindBrandSuggestions,
+    private val findDefaultUnit: FindDefaultUnit,
     private val buildSessionItemViews: BuildSessionItemViews,
     private val createShoppingItem: CreateShoppingItem,
     private val finishShoppingSession: FinishShoppingSession,
@@ -58,6 +66,7 @@ class LiveSessionViewModel(
     private var knownNames: List<String> = emptyList()
     private var lowStockNames: List<String> = emptyList()
     private var repeatNames: List<String> = emptyList()
+    private var brandPresets: List<BrandPreset> = emptyList()
 
     /**
      * [repeatFromSessionId] is the session the user tapped "belanja lagi" on — its item names go
@@ -84,15 +93,25 @@ class LiveSessionViewModel(
                 is Resource.Error -> return@launch failLoad(result)
                 is Resource.Success -> result.value
             }
+            val categories = when (val result = catalogRepository.getCatalog()) {
+                is Resource.Error -> return@launch failLoad(result)
+                is Resource.Success -> result.value
+            }
 
             finishedSessions = finished
             knownNames = buildNameSuggestions.knownNames(finishedSessions)
             lowStockNames = stock.filter { it.isLow() }.map { it.name }
             repeatNames = loadRepeatNames(repeatFromSessionId)
+            // A missing brand list costs the user a few chips, never the screen — the add form
+            // works exactly the same without it.
+            brandPresets = brandRepository.getBrands().dataOrNull().orEmpty()
 
             _state.update {
                 it.copy(
                     loadState = UiState.Success(Unit),
+                    categoryChips = categories.map { category ->
+                        NameChipView(name = category.name, emoji = category.emoji)
+                    },
                     frequentNames = buildNameChips(
                         buildNameSuggestions.frequent(
                             sessions = finishedSessions,
@@ -128,8 +147,8 @@ class LiveSessionViewModel(
                 nameSuggestions = emptyList(),
                 showNewItemChip = false,
                 lastPurchase = last,
-                brandSuggestions = findBrandSuggestions(picked, finishedSessions),
-                selectedUnit = last?.unit ?: CatalogData.defaultUnits[picked.normalized()] ?: DEFAULT_UNIT,
+                brandSuggestions = findBrandSuggestions(picked, finishedSessions, brandPresets),
+                selectedUnit = last?.unit ?: findDefaultUnit(picked) ?: DEFAULT_UNIT,
             )
         }
         _effects.trySend(LiveSessionEffect.NamePicked)
@@ -141,10 +160,11 @@ class LiveSessionViewModel(
             it.copy(
                 selectedCategory = selected,
                 categoryItems = buildNameChips(
-                    CatalogData.categories
+                    catalogRepository.current
                         .firstOrNull { entry -> entry.name == selected }
                         ?.items
-                        .orEmpty(),
+                        .orEmpty()
+                        .map { item -> item.name },
                 ),
             )
         }
@@ -481,7 +501,7 @@ class LiveSessionViewModel(
                 },
                 showNewItemChip = searching && !buildNameSuggestions.hasExactMatch(trimmed, knownNames),
                 lastPurchase = findLastPurchase(trimmed, finishedSessions),
-                brandSuggestions = findBrandSuggestions(trimmed, finishedSessions),
+                brandSuggestions = findBrandSuggestions(trimmed, finishedSessions, brandPresets),
             )
         }
     }

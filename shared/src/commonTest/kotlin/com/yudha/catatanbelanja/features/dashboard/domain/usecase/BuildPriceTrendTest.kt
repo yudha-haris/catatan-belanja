@@ -4,6 +4,8 @@ import com.yudha.catatanbelanja.core.domain.model.PriceBasis
 import com.yudha.catatanbelanja.core.domain.model.QtyOverride
 import com.yudha.catatanbelanja.core.domain.model.ShoppingItem
 import com.yudha.catatanbelanja.core.domain.model.ShoppingSession
+import com.yudha.catatanbelanja.core.domain.repository.FakeCatalogRepository
+import com.yudha.catatanbelanja.core.domain.usecase.FindDefaultUnit
 import com.yudha.catatanbelanja.core.domain.usecase.FindItemCategory
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,7 +18,11 @@ import kotlin.test.assertTrue
  */
 class BuildPriceTrendTest {
 
-    private val buildPriceTrend = BuildPriceTrend(FindItemCategory())
+    private val catalogRepository = FakeCatalogRepository()
+    private val buildPriceTrend = BuildPriceTrend(
+        findItemCategory = FindItemCategory(catalogRepository),
+        findDefaultUnit = FindDefaultUnit(catalogRepository),
+    )
 
     @Test
     fun `raw basis plots what each trip cost - inflation and all`() {

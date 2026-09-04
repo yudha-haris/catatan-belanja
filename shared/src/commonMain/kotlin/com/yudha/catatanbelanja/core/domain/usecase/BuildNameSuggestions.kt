@@ -1,20 +1,20 @@
 package com.yudha.catatanbelanja.core.domain.usecase
 
-import com.yudha.catatanbelanja.core.catalog.CatalogData
 import com.yudha.catatanbelanja.core.common.normalized
 import com.yudha.catatanbelanja.core.domain.model.ShoppingSession
+import com.yudha.catatanbelanja.core.domain.repository.CatalogRepository
 
 private const val SEARCH_LIMIT = 8
 private const val FREQUENT_LIMIT = 8
 private const val FREQUENT_TOTAL_LIMIT = 14
 
 /** The prototype's `knownNames()`, `frequent()` and the `renderSugg()` filter. */
-class BuildNameSuggestions {
+class BuildNameSuggestions(private val catalogRepository: CatalogRepository) {
     /** Catalog items ∪ every name ever purchased, deduped by normalized name. */
     fun knownNames(sessions: List<ShoppingSession>): List<String> {
         val byKey = LinkedHashMap<String, String>()
-        CatalogData.categories.forEach { category ->
-            category.items.forEach { byKey[it.normalized()] = it }
+        catalogRepository.current.forEach { category ->
+            category.items.forEach { byKey[it.name.normalized()] = it.name }
         }
         sessions.forEach { session ->
             session.items.forEach { item ->

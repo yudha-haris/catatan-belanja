@@ -27,12 +27,14 @@ class AppViewModel(
     val state: StateFlow<AppState> = _state.asStateFlow()
 
     init {
-        // The theme follows the database, so picking a colour in Settings re-themes the app on
-        // the spot — no waiting for the screen to close, and an imported or wiped backup lands
-        // just as immediately.
+        // The theme and the language follow the database, so picking either in Pengaturan
+        // re-draws the app on the spot — no waiting for the screen to close, and an imported
+        // or wiped backup lands just as immediately.
         viewModelScope.launch {
             settingsRepository.observeSettings().collectLatest { settings ->
-                _state.update { it.copy(themeFlavor = settings.themeFlavor) }
+                _state.update {
+                    it.copy(themeFlavor = settings.themeFlavor, language = settings.language)
+                }
             }
         }
     }

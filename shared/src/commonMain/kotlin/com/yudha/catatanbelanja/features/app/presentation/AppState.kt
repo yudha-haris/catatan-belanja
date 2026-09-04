@@ -1,6 +1,7 @@
 package com.yudha.catatanbelanja.features.app.presentation
 
 import com.yudha.catatanbelanja.core.common.UiState
+import com.yudha.catatanbelanja.core.domain.model.AppLanguage
 import com.yudha.catatanbelanja.core.domain.model.ThemeFlavor
 
 /**
@@ -10,5 +11,6 @@ import com.yudha.catatanbelanja.core.domain.model.ThemeFlavor
 data class AppState(
     val loadState: UiState<Unit> = UiState.Initial,
     val themeFlavor: ThemeFlavor = ThemeFlavor.PURPLE,
+    val language: AppLanguage = AppLanguage.SYSTEM,
     val hasActiveSession: Boolean = false,
 )

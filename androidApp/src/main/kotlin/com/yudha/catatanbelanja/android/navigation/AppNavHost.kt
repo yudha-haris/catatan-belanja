@@ -19,6 +19,11 @@ import com.yudha.catatanbelanja.android.screen.dashboard.SpendingReportScreen
 import com.yudha.catatanbelanja.android.screen.history.CompareScreen
 import com.yudha.catatanbelanja.android.screen.history.SessionDetailScreen
 import com.yudha.catatanbelanja.android.screen.list.ShoppingListScreen
+import com.yudha.catatanbelanja.android.screen.preset.PresetBrandsScreen
+import com.yudha.catatanbelanja.android.screen.preset.PresetCategoriesScreen
+import com.yudha.catatanbelanja.android.screen.preset.PresetHubScreen
+import com.yudha.catatanbelanja.android.screen.preset.PresetItemsScreen
+import com.yudha.catatanbelanja.android.screen.preset.PresetLanguageScreen
 import com.yudha.catatanbelanja.android.screen.settings.SettingsScreen
 import com.yudha.catatanbelanja.android.screen.shopping.LiveSessionScreen
 
@@ -176,7 +181,38 @@ fun AppNavHost(
         }
 
         composable(AppDestination.Pattern.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenPreset = { navController.navigate(AppDestination.Preset.route) },
+            )
+        }
+
+        composable(AppDestination.Pattern.PRESET) {
+            PresetHubScreen(
+                onBack = { navController.popBackStack() },
+                onOpenItems = { navController.navigate(AppDestination.PresetItems.route) },
+                onOpenCategories = {
+                    navController.navigate(AppDestination.PresetCategories.route)
+                },
+                onOpenBrands = { navController.navigate(AppDestination.PresetBrands.route) },
+                onOpenLanguage = { navController.navigate(AppDestination.PresetLanguage.route) },
+            )
+        }
+
+        composable(AppDestination.Pattern.PRESET_ITEMS) {
+            PresetItemsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppDestination.Pattern.PRESET_CATEGORIES) {
+            PresetCategoriesScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppDestination.Pattern.PRESET_BRANDS) {
+            PresetBrandsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppDestination.Pattern.PRESET_LANGUAGE) {
+            PresetLanguageScreen(onBack = { navController.popBackStack() })
         }
     }
 }

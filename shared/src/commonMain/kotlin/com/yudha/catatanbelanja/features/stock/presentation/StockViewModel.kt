@@ -2,7 +2,6 @@ package com.yudha.catatanbelanja.features.stock.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yudha.catatanbelanja.core.catalog.CatalogData
 import com.yudha.catatanbelanja.core.common.Failure
 import com.yudha.catatanbelanja.core.common.UiState
 import com.yudha.catatanbelanja.core.common.dataOrNull
@@ -19,6 +18,7 @@ import com.yudha.catatanbelanja.core.domain.model.StockRate
 import com.yudha.catatanbelanja.core.domain.model.StockReading
 import com.yudha.catatanbelanja.core.domain.repository.SessionRepository
 import com.yudha.catatanbelanja.core.domain.repository.StockRepository
+import com.yudha.catatanbelanja.core.domain.usecase.FindDefaultUnit
 import com.yudha.catatanbelanja.features.stock.domain.model.StockCheckLogView
 import com.yudha.catatanbelanja.features.stock.domain.model.StockCheckRow
 import com.yudha.catatanbelanja.features.stock.domain.model.StockRowView
@@ -42,6 +42,7 @@ class StockViewModel(
     private val sessionRepository: SessionRepository,
     private val buildStockRows: BuildStockRows,
     private val buildKnownStockNames: BuildKnownStockNames,
+    private val findDefaultUnit: FindDefaultUnit,
     private val calculateStockUsage: CalculateStockUsage,
     private val createStockItem: CreateStockItem,
     private val createStockRate: CreateStockRate,
@@ -119,7 +120,7 @@ class StockViewModel(
     fun onEditorNameChanged(name: String) {
         if (!state.value.isEditorNew) return
 
-        val unit = CatalogData.defaultUnits[name.normalized()] ?: return
+        val unit = findDefaultUnit(name) ?: return
         _state.update { it.copy(editorUnit = unit) }
     }
 

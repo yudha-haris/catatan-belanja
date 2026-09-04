@@ -82,6 +82,7 @@ internal fun LiveAddItemCard(
             Spacer(Modifier.height(Spacing.x10))
             LiveBrowseSuggestions(
                 frequentNames = state.frequentNames,
+                categoryChips = state.categoryChips,
                 selectedCategory = state.selectedCategory,
                 categoryItems = state.categoryItems,
                 onPickName = onPickName,

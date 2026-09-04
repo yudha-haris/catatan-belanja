@@ -1,5 +1,8 @@
 package com.yudha.catatanbelanja.core.data.database
 
+import com.yudha.catatanbelanja.core.domain.model.BrandPreset
+import com.yudha.catatanbelanja.core.domain.model.CatalogCategory
+import com.yudha.catatanbelanja.core.domain.model.CatalogItem
 import com.yudha.catatanbelanja.core.domain.model.PriceBasis
 import com.yudha.catatanbelanja.core.domain.model.QtyOverride
 import com.yudha.catatanbelanja.core.domain.model.RateMode
@@ -15,6 +18,9 @@ import com.yudha.catatanbelanja.core.domain.model.StockItem
 import com.yudha.catatanbelanja.core.domain.model.StockRate
 import com.yudha.catatanbelanja.core.domain.model.StockReading
 import com.yudha.catatanbelanja.core.domain.model.TrendSetting
+import com.yudha.catatanbelanja.db.Brand_preset
+import com.yudha.catatanbelanja.db.Catalog_category
+import com.yudha.catatanbelanja.db.Catalog_item
 import com.yudha.catatanbelanja.db.SelectFinished
 import com.yudha.catatanbelanja.db.Session
 import com.yudha.catatanbelanja.db.Session_item
@@ -137,3 +143,25 @@ internal fun Trend_qty_override.toDomain(): QtyOverride = QtyOverride(
 /** An unknown basis string can only come from a hand-edited database; read it as the default. */
 private fun parsePriceBasis(raw: String): PriceBasis =
     PriceBasis.entries.firstOrNull { it.name == raw } ?: PriceBasis.RAW
+
+internal fun Catalog_category.toDomain(items: List<CatalogItem>): CatalogCategory = CatalogCategory(
+    id = id,
+    name = name,
+    emoji = emoji,
+    position = position.toInt(),
+    items = items,
+)
+
+internal fun Catalog_item.toDomain(): CatalogItem = CatalogItem(
+    id = id,
+    categoryId = category_id,
+    name = name,
+    defaultUnit = default_unit,
+    position = position.toInt(),
+)
+
+internal fun Brand_preset.toDomain(): BrandPreset = BrandPreset(
+    id = id,
+    name = name,
+    position = position.toInt(),
+)

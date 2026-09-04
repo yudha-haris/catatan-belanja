@@ -1,11 +1,11 @@
 package com.yudha.catatanbelanja.features.dashboard.domain.usecase
 
-import com.yudha.catatanbelanja.core.catalog.CatalogData
 import com.yudha.catatanbelanja.core.catalog.UnitConversion
 import com.yudha.catatanbelanja.core.common.normalized
 import com.yudha.catatanbelanja.core.domain.model.PriceBasis
 import com.yudha.catatanbelanja.core.domain.model.QtyOverride
 import com.yudha.catatanbelanja.core.domain.model.ShoppingSession
+import com.yudha.catatanbelanja.core.domain.usecase.FindDefaultUnit
 import com.yudha.catatanbelanja.core.domain.usecase.FindItemCategory
 import com.yudha.catatanbelanja.features.dashboard.domain.model.PriceTrendData
 import com.yudha.catatanbelanja.features.dashboard.domain.model.TrendPoint
@@ -29,6 +29,7 @@ private const val MIN_TREND_POINTS = 2
  */
 class BuildPriceTrend(
     private val findItemCategory: FindItemCategory,
+    private val findDefaultUnit: FindDefaultUnit,
 ) {
     operator fun invoke(
         sessions: List<ShoppingSession>,
@@ -109,7 +110,7 @@ class BuildPriceTrend(
             .mapNotNull { it.effectiveUnit()?.normalized() }
             .filter { it.isNotBlank() }
             .distinct()
-        val seed = recorded.ifEmpty { listOfNotNull(CatalogData.defaultUnits[name.normalized()]) }
+        val seed = recorded.ifEmpty { listOfNotNull(findDefaultUnit(name)?.normalized()) }
         return seed.flatMap { UnitConversion.family(it) }.distinct()
     }
 

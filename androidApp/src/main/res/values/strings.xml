@@ -589,4 +589,100 @@
     <string name="trend_msg_cleared">Back to the receipt</string>
     <string name="trend_empty_title">No trend yet</string>
     <string name="trend_empty_message">Buy the same thing twice and its price trend shows up here.</string>
+
+    <!-- ============ preset: Settings > Preset, the four lists the app offers you ============ -->
+    <string name="settings_preset_title">Presets</string>
+    <string name="settings_preset_row_title">Preset lists</string>
+    <string name="settings_preset_row_subtitle">Items, categories, brands and the language</string>
+
+    <string name="preset_title">Presets</string>
+    <string name="preset_section_catalog">Catalogue</string>
+    <string name="preset_section_display">Display</string>
+    <string name="preset_toast_name_required">Name can\'t be empty</string>
+
+    <plurals name="preset_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <plurals name="preset_category_count">
+        <item quantity="one">%1$d category</item>
+        <item quantity="other">%1$d categories</item>
+    </plurals>
+    <plurals name="preset_brand_count">
+        <item quantity="one">%1$d brand</item>
+        <item quantity="other">%1$d brands</item>
+    </plurals>
+
+    <!-- preset > items ("belanjaan") -->
+    <string name="preset_items_title">Items</string>
+    <string name="preset_items_subtitle">What the add form suggests</string>
+    <string name="preset_items_add">Add an item</string>
+    <string name="preset_items_search_placeholder">Search an item…</string>
+    <string name="preset_items_no_default_unit">no default unit</string>
+    <string name="preset_items_name_placeholder">e.g. Cooking oil</string>
+    <string name="preset_items_category_label">Category</string>
+    <string name="preset_items_default_unit_label">Default unit</string>
+    <string name="preset_items_sheet_add_title">New item</string>
+    <string name="preset_items_sheet_edit_title">Edit item</string>
+    <string name="preset_items_delete_title">Delete \"%1$s\"?</string>
+    <string name="preset_items_delete_message">It disappears from the suggestions. Trips that already recorded it are untouched.</string>
+    <string name="preset_items_toast_deleted">Item deleted</string>
+    <string name="preset_items_toast_duplicate">That item is already in the catalogue</string>
+    <string name="preset_items_toast_category_required">Pick a category first</string>
+    <string name="preset_items_search_empty_title">Nothing matches</string>
+    <string name="preset_items_search_empty_message">Try a shorter word, or add it as a new item.</string>
+    <string name="preset_items_no_category_title">No categories yet</string>
+    <string name="preset_items_no_category_message">An item is filed under a category, so make one first.</string>
+
+    <!-- preset > categories ("kategori") -->
+    <string name="preset_categories_title">Categories</string>
+    <string name="preset_categories_subtitle">How items are grouped and iconed</string>
+    <string name="preset_categories_add">Add a category</string>
+    <string name="preset_categories_reset">Restore the defaults</string>
+    <string name="preset_categories_name_label">Category name</string>
+    <string name="preset_categories_name_placeholder">e.g. Staples</string>
+    <string name="preset_categories_emoji_label">Icon</string>
+    <string name="preset_categories_sheet_add_title">New category</string>
+    <string name="preset_categories_sheet_edit_title">Edit category</string>
+    <string name="preset_categories_delete_title">Delete \"%1$s\"?</string>
+    <plurals name="preset_categories_delete_message">
+        <item quantity="one">The %1$d item under it goes too. Trips that already recorded it are untouched.</item>
+        <item quantity="other">The %1$d items under it go too. Trips that already recorded them are untouched.</item>
+    </plurals>
+    <string name="preset_categories_reset_title">Restore the default catalogue?</string>
+    <string name="preset_categories_reset_message">Every category and item you added or edited is replaced by the built-in ones. Your trips, stock and lists are untouched.</string>
+    <string name="preset_categories_reset_confirm">Restore</string>
+    <string name="preset_categories_toast_deleted">Category deleted</string>
+    <string name="preset_categories_toast_duplicate">That category already exists</string>
+    <string name="preset_categories_toast_restored">Default catalogue restored</string>
+    <string name="preset_categories_empty_title">No categories</string>
+    <string name="preset_categories_empty_message">Add one, or restore the built-in catalogue.</string>
+
+    <!-- preset > brands ("merk") -->
+    <string name="preset_brands_title">Brands</string>
+    <string name="preset_brands_subtitle">Offered under every item</string>
+    <string name="preset_brands_add">Add a brand</string>
+    <string name="preset_brands_name_label">Brand name</string>
+    <string name="preset_brands_name_placeholder">e.g. Bimoli, Indomie goreng</string>
+    <string name="preset_brands_sheet_add_title">New brand</string>
+    <string name="preset_brands_sheet_edit_title">Edit brand</string>
+    <string name="preset_brands_delete_title">Delete this brand?</string>
+    <string name="preset_brands_delete_message">It stops being offered. Trips that already recorded it are untouched.</string>
+    <string name="preset_brands_toast_deleted">Brand deleted</string>
+    <string name="preset_brands_toast_duplicate">That brand is already on the list</string>
+    <string name="preset_brands_empty_title">No brands yet</string>
+    <string name="preset_brands_empty_message">Add the ones you keep typing, and they become a tap.</string>
+
+    <!-- preset > language ("bahasa") -->
+    <string name="preset_language_title">Language</string>
+    <string name="preset_language_subtitle">The language the app is written in</string>
+    <string name="preset_language_system">Follow the system</string>
+    <string name="preset_language_indonesian">Indonesian</string>
+    <string name="preset_language_english">English</string>
+    <string name="preset_language_system_example">Whatever this phone is set to</string>
+    <string name="preset_language_indonesian_example">Belanja · Riwayat · Stok · Ringkasan</string>
+    <string name="preset_language_english_example">Shopping · History · Stock · Summary</string>
+    <string name="preset_language_toast_applied">Language applied</string>
+    <string name="preset_language_note_title">What stays as it is</string>
+    <string name="preset_language_note_message">Item, category and brand names are your own data, so they are never translated. Prices stay in rupiah.</string>
 </resources>

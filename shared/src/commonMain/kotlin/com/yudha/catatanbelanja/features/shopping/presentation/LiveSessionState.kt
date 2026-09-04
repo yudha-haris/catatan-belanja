@@ -19,6 +19,8 @@ data class LiveSessionState(
     /** True when nothing known matches the query, so the "＋ barang baru" chip shows. */
     val showNewItemChip: Boolean = false,
     val frequentNames: List<NameChipView> = emptyList(),
+    /** The catalog's categories, as the browse row draws them. Stored, so the user's own show up. */
+    val categoryChips: List<NameChipView> = emptyList(),
     val selectedCategory: String? = null,
     val categoryItems: List<NameChipView> = emptyList(),
     val lastPurchase: LastPurchase? = null,

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yudha.catatanbelanja.android.designsystem.component.feedback.AppDialogHost
 import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
+import com.yudha.catatanbelanja.android.locale.AppLocale
 import com.yudha.catatanbelanja.android.navigation.AppNavHost
 import com.yudha.catatanbelanja.core.common.UiState
 import com.yudha.catatanbelanja.features.app.presentation.AppViewModel
@@ -38,21 +39,23 @@ class MainActivity : ComponentActivity() {
                 viewModel.load()
             }
 
-            AppTheme(flavor = state.themeFlavor) {
-                AppDialogHost {
-                    // Nothing routes until the boot read lands: the graph needs to know whether a
-                    // session is still running before it decides where the app opens. A failed
-                    // read still boots, on the defaults.
-                    when (state.loadState) {
-                        UiState.Initial, UiState.Loading -> Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(AppTheme.colors.background),
-                        )
+            AppLocale(language = state.language) {
+                AppTheme(flavor = state.themeFlavor) {
+                    AppDialogHost {
+                        // Nothing routes until the boot read lands: the graph needs to know
+                        // whether a session is still running before it decides where the app
+                        // opens. A failed read still boots, on the defaults.
+                        when (state.loadState) {
+                            UiState.Initial, UiState.Loading -> Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(AppTheme.colors.background),
+                            )
 
-                        is UiState.Success, is UiState.Error -> AppNavHost(
-                            openLiveSessionOnStart = state.hasActiveSession,
-                        )
+                            is UiState.Success, is UiState.Error -> AppNavHost(
+                                openLiveSessionOnStart = state.hasActiveSession,
+                            )
+                        }
                     }
                 }
             }

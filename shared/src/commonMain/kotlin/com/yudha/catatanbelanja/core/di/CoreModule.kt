@@ -6,6 +6,7 @@ import com.yudha.catatanbelanja.core.common.RandomIdGenerator
 import com.yudha.catatanbelanja.core.common.SystemClock
 import com.yudha.catatanbelanja.core.domain.usecase.BuildNameChips
 import com.yudha.catatanbelanja.core.domain.usecase.BuildNameSuggestions
+import com.yudha.catatanbelanja.core.domain.usecase.FindDefaultUnit
 import com.yudha.catatanbelanja.core.domain.usecase.FindItemCategory
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -34,6 +35,7 @@ val coreModule: Module = module {
     singleOf(::RandomIdGenerator) bind IdGenerator::class
 
     factoryOf(::FindItemCategory)
+    factoryOf(::FindDefaultUnit)
 
     // Item-name suggestions are shared: the live session offers them while shopping, the
     // list screen while planning. `features.list` may not import `features.shopping`.

@@ -1,6 +1,7 @@
 package com.yudha.catatanbelanja.core.domain.repository
 
 import com.yudha.catatanbelanja.core.common.Resource
+import com.yudha.catatanbelanja.core.domain.model.AppLanguage
 import com.yudha.catatanbelanja.core.domain.model.AppSettings
 import com.yudha.catatanbelanja.core.domain.model.ThemeFlavor
 import kotlinx.coroutines.flow.Flow
@@ -15,4 +16,6 @@ interface SettingsRepository {
      */
     fun observeSettings(): Flow<AppSettings>
     suspend fun saveThemeFlavor(flavor: ThemeFlavor): Resource<Unit>
+
+    suspend fun saveLanguage(language: AppLanguage): Resource<Unit>
 }

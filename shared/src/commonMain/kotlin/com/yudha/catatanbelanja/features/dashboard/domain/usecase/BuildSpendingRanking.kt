@@ -138,8 +138,7 @@ class BuildSpendingRanking(
         )
     }
 
-    private fun emojiOfCategory(name: String): String =
-        CatalogData.categories.firstOrNull { it.name == name }?.emoji ?: CatalogData.FALLBACK_EMOJI
+    private fun emojiOfCategory(name: String): String = findItemCategory.emojiOfCategory(name)
 
     private fun fractionOf(part: Int, whole: Int): Float {
         if (whole <= 0) return 0f

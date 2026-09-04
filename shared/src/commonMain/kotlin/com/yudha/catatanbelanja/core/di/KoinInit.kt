@@ -4,6 +4,7 @@ import com.yudha.catatanbelanja.features.app.di.appFeatureModule
 import com.yudha.catatanbelanja.features.dashboard.di.dashboardModule
 import com.yudha.catatanbelanja.features.history.di.historyModule
 import com.yudha.catatanbelanja.features.list.di.listModule
+import com.yudha.catatanbelanja.features.preset.di.presetModule
 import com.yudha.catatanbelanja.features.settings.di.settingsModule
 import com.yudha.catatanbelanja.features.shopping.di.shoppingModule
 import com.yudha.catatanbelanja.features.stock.di.stockModule
@@ -32,5 +33,6 @@ fun initKoin(
         stockModule,
         dashboardModule,
         settingsModule,
+        presetModule,
     )
 }

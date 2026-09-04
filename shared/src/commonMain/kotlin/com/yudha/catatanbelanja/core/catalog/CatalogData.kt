@@ -1,11 +1,22 @@
 package com.yudha.catatanbelanja.core.catalog
 
-import com.yudha.catatanbelanja.core.domain.model.ItemCategory
+import com.yudha.catatanbelanja.core.common.normalized
+import com.yudha.catatanbelanja.core.domain.model.CatalogCategory
+import com.yudha.catatanbelanja.core.domain.model.CatalogItem
+import com.yudha.catatanbelanja.core.domain.model.CatalogSeed
 
-/** The prototype's CATS / UNITS / UNIT_DEFAULT tables, verbatim. Data, not UI copy. */
+/**
+ * The prototype's CATS / UNITS / UNIT_DEFAULT tables, verbatim. Data, not UI copy.
+ *
+ * [categories] and [defaultUnits] are only the *defaults* now: they are written into the
+ * database once, by [defaultCatalog], and every later read goes through
+ * [CatalogRepository][com.yudha.catatanbelanja.core.domain.repository.CatalogRepository]
+ * so that Pengaturan > Preset can edit them. [units] and [FALLBACK_EMOJI] stay fixed — a
+ * unit is a measurement, not a preference.
+ */
 object CatalogData {
-    val categories: List<ItemCategory> = listOf(
-        ItemCategory(
+    val categories: List<CatalogSeed> = listOf(
+        CatalogSeed(
             name = "Sembako",
             emoji = "🍚",
             items = listOf(
@@ -24,7 +35,7 @@ object CatalogData {
                 "Bumbu Dapur",
             ),
         ),
-        ItemCategory(
+        CatalogSeed(
             name = "Sayur & Buah",
             emoji = "🥬",
             items = listOf(
@@ -44,7 +55,7 @@ object CatalogData {
                 "Pepaya",
             ),
         ),
-        ItemCategory(
+        CatalogSeed(
             name = "Lauk",
             emoji = "🍗",
             items = listOf(
@@ -59,7 +70,7 @@ object CatalogData {
                 "Bakso",
             ),
         ),
-        ItemCategory(
+        CatalogSeed(
             name = "Susu & Roti",
             emoji = "🥛",
             items = listOf(
@@ -72,7 +83,7 @@ object CatalogData {
                 "Sereal",
             ),
         ),
-        ItemCategory(
+        CatalogSeed(
             name = "Rumah Tangga",
             emoji = "🧴",
             items = listOf(
@@ -90,7 +101,7 @@ object CatalogData {
                 "Kantong Sampah",
             ),
         ),
-        ItemCategory(
+        CatalogSeed(
             name = "Camilan",
             emoji = "🍪",
             items = listOf(
@@ -156,3 +167,33 @@ object CatalogData {
 
     const val FALLBACK_EMOJI = "🛍️"
 }
+
+/**
+ * The built-in catalog as rows, ready to be written to an empty database: [CatalogData.categories]
+ * with its [CatalogData.defaultUnits] folded in, and ids slugged from the names.
+ *
+ * The ids are derived rather than generated so that two installs seed the same catalog — a
+ * "beras" row means the same thing on both, which keeps a future export honest.
+ */
+fun CatalogData.defaultCatalog(): List<CatalogCategory> =
+    categories.mapIndexed { categoryIndex, seed ->
+        val categoryId = seed.name.toCatalogId()
+        CatalogCategory(
+            id = categoryId,
+            name = seed.name,
+            emoji = seed.emoji,
+            position = categoryIndex,
+            items = seed.items.mapIndexed { itemIndex, name ->
+                CatalogItem(
+                    id = name.toCatalogId(),
+                    categoryId = categoryId,
+                    name = name,
+                    defaultUnit = defaultUnits[name.normalized()].orEmpty(),
+                    position = itemIndex,
+                )
+            },
+        )
+    }
+
+/** "Minyak Goreng" -> "minyak-goreng". Only used for the built-in rows, whose names are ASCII. */
+private fun String.toCatalogId(): String = normalized().replace(' ', '-')

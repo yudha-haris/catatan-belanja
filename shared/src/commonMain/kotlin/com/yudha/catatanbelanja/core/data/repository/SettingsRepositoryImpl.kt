@@ -3,6 +3,7 @@ package com.yudha.catatanbelanja.core.data.repository
 import com.yudha.catatanbelanja.core.common.Resource
 import com.yudha.catatanbelanja.core.common.resourceOf
 import com.yudha.catatanbelanja.core.data.database.SettingsDao
+import com.yudha.catatanbelanja.core.domain.model.AppLanguage
 import com.yudha.catatanbelanja.core.domain.model.AppSettings
 import com.yudha.catatanbelanja.core.domain.model.ThemeFlavor
 import com.yudha.catatanbelanja.core.domain.repository.SettingsRepository
@@ -21,10 +22,14 @@ class SettingsRepositoryImpl(
         .catch { emit(AppSettings()) }
 
     override suspend fun saveThemeFlavor(flavor: ThemeFlavor): Resource<Unit> =
-        resourceOf(MSG_SAVE) { settingsDao.saveThemeFlavor(flavor) }
+        resourceOf(MSG_SAVE_THEME) { settingsDao.saveThemeFlavor(flavor) }
+
+    override suspend fun saveLanguage(language: AppLanguage): Resource<Unit> =
+        resourceOf(MSG_SAVE_LANGUAGE) { settingsDao.saveLanguage(language) }
 
     private companion object {
         const val MSG_LOAD = "Failed to load settings"
-        const val MSG_SAVE = "Failed to save the theme flavor"
+        const val MSG_SAVE_THEME = "Failed to save the theme flavor"
+        const val MSG_SAVE_LANGUAGE = "Failed to save the language"
     }
 }

@@ -1,0 +1,39 @@
+-- The item catalog's categories, editable from Pengaturan > Preset. Seeded once from
+-- CatalogData.defaultCatalog(); after that this table is the only catalog the app reads.
+CREATE TABLE catalog_category (
+    id       TEXT NOT NULL PRIMARY KEY,
+    name     TEXT NOT NULL,
+    emoji    TEXT NOT NULL DEFAULT '',
+    position INTEGER NOT NULL DEFAULT 0   -- ascending == the order the chips are drawn in
+);
+
+selectAll:
+SELECT *
+FROM catalog_category
+ORDER BY position ASC;
+
+selectMaxPosition:
+SELECT position
+FROM catalog_category
+ORDER BY position DESC
+LIMIT 1;
+
+countAll:
+SELECT count(*)
+FROM catalog_category;
+
+insert:
+INSERT INTO catalog_category (id, name, emoji, position)
+VALUES (?, ?, ?, ?);
+
+update:
+UPDATE catalog_category
+SET name = :name, emoji = :emoji
+WHERE id = :id;
+
+deleteById:
+DELETE FROM catalog_category
+WHERE id = ?;
+
+deleteAll:
+DELETE FROM catalog_category;

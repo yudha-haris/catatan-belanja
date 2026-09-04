@@ -586,4 +586,96 @@
     <string name="trend_msg_cleared">Balik ke catatan asli</string>
     <string name="trend_empty_title">Belum ada tren</string>
     <string name="trend_empty_message">Beli barang yang sama minimal dua kali, nanti tren harganya muncul di sini.</string>
+
+    <!-- ============ preset: Pengaturan > Preset, empat daftar yang ditawarkan aplikasi ============ -->
+    <string name="settings_preset_title">Preset</string>
+    <string name="settings_preset_row_title">Daftar preset</string>
+    <string name="settings_preset_row_subtitle">Belanjaan, kategori, merk dan bahasa</string>
+
+    <string name="preset_title">Preset</string>
+    <string name="preset_section_catalog">Katalog</string>
+    <string name="preset_section_display">Tampilan</string>
+    <string name="preset_toast_name_required">Nama tidak boleh kosong</string>
+
+    <plurals name="preset_item_count">
+        <item quantity="other">%1$d item</item>
+    </plurals>
+    <plurals name="preset_category_count">
+        <item quantity="other">%1$d kategori</item>
+    </plurals>
+    <plurals name="preset_brand_count">
+        <item quantity="other">%1$d merk</item>
+    </plurals>
+
+    <!-- preset > belanjaan -->
+    <string name="preset_items_title">Belanjaan</string>
+    <string name="preset_items_subtitle">Yang muncul saat menambah barang</string>
+    <string name="preset_items_add">Tambah barang</string>
+    <string name="preset_items_search_placeholder">Cari barang…</string>
+    <string name="preset_items_no_default_unit">tanpa satuan bawaan</string>
+    <string name="preset_items_name_placeholder">mis. Minyak Goreng</string>
+    <string name="preset_items_category_label">Kategori</string>
+    <string name="preset_items_default_unit_label">Satuan bawaan</string>
+    <string name="preset_items_sheet_add_title">Barang baru</string>
+    <string name="preset_items_sheet_edit_title">Ubah barang</string>
+    <string name="preset_items_delete_title">Hapus \"%1$s\"?</string>
+    <string name="preset_items_delete_message">Barangnya hilang dari saran. Belanja yang sudah mencatatnya tidak berubah.</string>
+    <string name="preset_items_toast_deleted">Barang dihapus</string>
+    <string name="preset_items_toast_duplicate">Barang itu sudah ada di katalog</string>
+    <string name="preset_items_toast_category_required">Pilih kategorinya dulu</string>
+    <string name="preset_items_search_empty_title">Tidak ada yang cocok</string>
+    <string name="preset_items_search_empty_message">Coba kata yang lebih pendek, atau tambahkan sebagai barang baru.</string>
+    <string name="preset_items_no_category_title">Belum ada kategori</string>
+    <string name="preset_items_no_category_message">Setiap barang masuk ke satu kategori, jadi buat kategorinya dulu.</string>
+
+    <!-- preset > kategori -->
+    <string name="preset_categories_title">Kategori</string>
+    <string name="preset_categories_subtitle">Cara barang dikelompokkan dan diberi ikon</string>
+    <string name="preset_categories_add">Tambah kategori</string>
+    <string name="preset_categories_reset">Kembalikan bawaan</string>
+    <string name="preset_categories_name_label">Nama kategori</string>
+    <string name="preset_categories_name_placeholder">mis. Sembako</string>
+    <string name="preset_categories_emoji_label">Ikon</string>
+    <string name="preset_categories_sheet_add_title">Kategori baru</string>
+    <string name="preset_categories_sheet_edit_title">Ubah kategori</string>
+    <string name="preset_categories_delete_title">Hapus \"%1$s\"?</string>
+    <plurals name="preset_categories_delete_message">
+        <item quantity="other">%1$d barang di dalamnya ikut terhapus. Belanja yang sudah mencatatnya tidak berubah.</item>
+    </plurals>
+    <string name="preset_categories_reset_title">Kembalikan katalog bawaan?</string>
+    <string name="preset_categories_reset_message">Semua kategori dan barang yang kamu tambah atau ubah diganti dengan bawaan aplikasi. Belanja, stok dan daftar tidak tersentuh.</string>
+    <string name="preset_categories_reset_confirm">Kembalikan</string>
+    <string name="preset_categories_toast_deleted">Kategori dihapus</string>
+    <string name="preset_categories_toast_duplicate">Kategori itu sudah ada</string>
+    <string name="preset_categories_toast_restored">Katalog bawaan dikembalikan</string>
+    <string name="preset_categories_empty_title">Belum ada kategori</string>
+    <string name="preset_categories_empty_message">Tambah satu, atau kembalikan katalog bawaan.</string>
+
+    <!-- preset > merk -->
+    <string name="preset_brands_title">Merk</string>
+    <string name="preset_brands_subtitle">Ditawarkan di semua barang</string>
+    <string name="preset_brands_add">Tambah merk</string>
+    <string name="preset_brands_name_label">Nama merk</string>
+    <string name="preset_brands_name_placeholder">mis. Bimoli, Indomie goreng</string>
+    <string name="preset_brands_sheet_add_title">Merk baru</string>
+    <string name="preset_brands_sheet_edit_title">Ubah merk</string>
+    <string name="preset_brands_delete_title">Hapus merk ini?</string>
+    <string name="preset_brands_delete_message">Merknya berhenti ditawarkan. Belanja yang sudah mencatatnya tidak berubah.</string>
+    <string name="preset_brands_toast_deleted">Merk dihapus</string>
+    <string name="preset_brands_toast_duplicate">Merk itu sudah ada di daftar</string>
+    <string name="preset_brands_empty_title">Belum ada merk</string>
+    <string name="preset_brands_empty_message">Tambahkan yang sering kamu ketik, biar cukup sekali tap.</string>
+
+    <!-- preset > bahasa -->
+    <string name="preset_language_title">Bahasa</string>
+    <string name="preset_language_subtitle">Bahasa tulisan di aplikasi</string>
+    <string name="preset_language_system">Ikuti sistem</string>
+    <string name="preset_language_indonesian">Indonesia</string>
+    <string name="preset_language_english">Inggris</string>
+    <string name="preset_language_system_example">Mengikuti setelan HP ini</string>
+    <string name="preset_language_indonesian_example">Belanja · Riwayat · Stok · Ringkasan</string>
+    <string name="preset_language_english_example">Shopping · History · Stock · Summary</string>
+    <string name="preset_language_toast_applied">Bahasa diterapkan</string>
+    <string name="preset_language_note_title">Yang tidak ikut berubah</string>
+    <string name="preset_language_note_message">Nama barang, kategori dan merk adalah datamu sendiri, jadi tidak pernah diterjemahkan. Harga tetap dalam rupiah.</string>
 </resources>

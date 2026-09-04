@@ -3,6 +3,10 @@ CREATE TABLE settings (
     value TEXT NOT NULL
 );
 
+selectAll:
+SELECT *
+FROM settings;
+
 get:
 SELECT value
 FROM settings

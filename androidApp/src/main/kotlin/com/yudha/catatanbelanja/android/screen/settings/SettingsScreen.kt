@@ -34,6 +34,7 @@ import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
 import com.yudha.catatanbelanja.android.screen.settings.components.SettingsDataCard
 import com.yudha.catatanbelanja.android.screen.settings.components.SettingsExportSheet
 import com.yudha.catatanbelanja.android.screen.settings.components.SettingsImportSheet
+import com.yudha.catatanbelanja.android.screen.settings.components.SettingsPresetCard
 import com.yudha.catatanbelanja.android.screen.settings.components.SettingsStorageCard
 import com.yudha.catatanbelanja.android.screen.settings.components.SettingsThemePicker
 import com.yudha.catatanbelanja.android.screen.settings.components.SettingsTipsCard
@@ -53,6 +54,7 @@ private val ImportMimeTypes = arrayOf("application/json", "text/plain")
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenPreset: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
@@ -138,6 +140,9 @@ fun SettingsScreen(
             selected = state.themeFlavor,
             onSelect = viewModel::changeTheme,
         )
+
+        AppSectionHeader(title = stringResource(R.string.settings_preset_title))
+        SettingsPresetCard(onOpenPreset = onOpenPreset)
 
         AppSectionHeader(title = stringResource(R.string.settings_data_title))
         SettingsDataCard(

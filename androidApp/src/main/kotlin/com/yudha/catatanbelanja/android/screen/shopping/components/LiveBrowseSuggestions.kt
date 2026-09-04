@@ -19,7 +19,6 @@ import com.yudha.catatanbelanja.android.designsystem.component.button.AppChip
 import com.yudha.catatanbelanja.android.designsystem.component.button.AppChipVariant
 import com.yudha.catatanbelanja.android.designsystem.theme.AppTheme
 import com.yudha.catatanbelanja.android.designsystem.theme.Spacing
-import com.yudha.catatanbelanja.core.catalog.CatalogData
 import com.yudha.catatanbelanja.core.domain.model.NameChipView
 
 /** `renderSugg()` with an empty box: what you buy often, then the catalog to browse. */
@@ -27,6 +26,7 @@ import com.yudha.catatanbelanja.core.domain.model.NameChipView
 @Composable
 internal fun LiveBrowseSuggestions(
     frequentNames: List<NameChipView>,
+    categoryChips: List<NameChipView>,
     selectedCategory: String?,
     categoryItems: List<NameChipView>,
     onPickName: (String) -> Unit,
@@ -70,7 +70,7 @@ internal fun LiveBrowseSuggestions(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(Spacing.x8),
         ) {
-            CatalogData.categories.forEach { category ->
+            categoryChips.forEach { category ->
                 AppChip(
                     text = category.name,
                     onClick = { onPickCategory(category.name) },
